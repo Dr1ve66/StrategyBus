@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold">Итоговый результат</h1>
+    <p class="text-muted mb-0">Финальные данные по двум этапам выбора.</p>
+  </div>
+  <a class="btn btn-success btn-lg align-self-start" href="{{ url_for('result_pdf', selected_id=selected.id) }}">Выгрузить в PDF</a>
+</div>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card h-100 border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">Выбор Агента 1</h2>
+        {% if selected.was_edited %}<span class="badge text-bg-warning">✏️ Отредактировано</span>{% endif %}
+      </div>
+      <div class="card-body">
+        <h3 class="h5">{{ selected.final_title }}</h3>
+        <p class="text-prewrap">{{ selected.final_description }}</p>
+        <hr>
+        <div class="fw-semibold mb-1">Логика</div>
+        <p class="text-prewrap">{{ selected.final_logic }}</p>
+        <div class="fw-semibold mb-1">Критерии</div>
+        <p class="text-prewrap mb-0">{{ selected.final_criteria }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100 border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">Результат Агента 2</h2>
+        {% if final.was_edited %}<span class="badge text-bg-warning">✏️ Отредактировано</span>{% endif %}
+      </div>
+      <div class="card-body">
+        <h3 class="h5">{{ final.final_title }}</h3>
+        <p class="text-prewrap">{{ final.final_description }}</p>
+        <hr>
+        <div class="fw-semibold mb-1">Логика</div>
+        <p class="text-prewrap">{{ final.final_logic }}</p>
+        <div class="fw-semibold mb-1">Критерии</div>
+        <p class="text-prewrap mb-0">{{ final.final_criteria }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="d-flex flex-wrap gap-2 mt-4">
+  <a class="btn btn-outline-primary btn-lg" href="{{ url_for('history') }}">📋 История</a>
+  <a class="btn btn-primary btn-lg" href="{{ url_for('index') }}">➕ Новый запрос</a>
+</div>
+{% endblock %}

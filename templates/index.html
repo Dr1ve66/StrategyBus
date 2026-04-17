@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="mb-4">
+      <h1 class="display-6 fw-bold">Новый запрос</h1>
+      <p class="text-muted mb-0">Введите ситуацию Клиента. Агент 1 предложит три варианта Стратегии для выбора, редактирования или повторной генерации.</p>
+    </div>
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-body p-4">
+        <form method="post" action="{{ url_for('process') }}" data-ai-form>
+          <label class="form-label fw-semibold" for="input_text">Введите описание ситации</label>
+          <textarea id="input_text" class="form-control input-textarea" name="input_text" rows="12" required placeholder="Опишите ситуация максимально подробно. Чем более подробно будет запрос - тем более релевантные решения будут предложены"></textarea>
+          <div class="d-flex justify-content-end mt-4">
+            <button class="btn btn-primary btn-lg" type="submit">Отправить запрос →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

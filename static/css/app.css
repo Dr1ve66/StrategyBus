@@ -1,0 +1,82 @@
+body {
+  background: #f6f7fb;
+}
+
+.page-shell {
+  padding-bottom: 8rem;
+}
+
+.min-vh-75 {
+  min-height: 75vh;
+}
+
+.input-textarea {
+  resize: vertical;
+  min-height: 320px;
+}
+
+.option-card {
+  transition: border-color .2s ease, opacity .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.option-card:hover {
+  transform: translateY(-1px);
+}
+
+.option-card.editing-card {
+  border-color: #ffc107 !important;
+  box-shadow: 0 .5rem 1rem rgba(255, 193, 7, .18) !important;
+}
+
+.option-card.rejected-card {
+  opacity: .35;
+}
+
+.option-card.dimmed-card {
+  opacity: .45;
+}
+
+.title-input[readonly] {
+  background: transparent;
+  box-shadow: none;
+}
+
+.title-input:not([readonly]) {
+  border: 1px solid #ffc107 !important;
+  background: #fffaf0;
+}
+
+textarea[readonly] {
+  background: #f8f9fa;
+}
+
+.sticky-actions {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 1010;
+}
+
+.ai-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.text-prewrap {
+  white-space: pre-wrap;
+}
+
+.accordion-button {
+  font-weight: 600;
+}
+
+.option-card.border-success[data-status="accepted"] {
+    border-width: 3px !important;
+    border-color: #198754 !important;
+    box-shadow: 0 .5rem 1rem rgba(25, 135, 84, .18) !important;
+    background-color: #f0fff4;
+}

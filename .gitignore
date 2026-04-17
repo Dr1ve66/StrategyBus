@@ -1,3 +1,4 @@
+
 # See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # compiled output
@@ -55,3 +56,46 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+data/
+instance/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build/cache
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% from '_cards.html' import render_cards %}
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+  <div>
+    <h1 class="h2 fw-bold">Выбор вариантов Шагов</h1>
+    <p class="text-muted mb-0">Можно выбрать несколько пунктов (не менее 3) результата Агента 2 или добавить собственный пункт.</p>
+  </div>
+  <a class="btn btn-outline-secondary align-self-start" href="{{ url_for('review', input_id=selected.input_id) }}">Назад к выбору Стратегии</a>
+</div>
+
+<div class="card border-success mb-4 rounded-4">
+  <div class="card-header bg-success-subtle fw-semibold">Выбранные пункты Агента 1</div>
+  <div class="card-body">
+    <h2 class="h5">{{ selected.final_title }}</h2>
+    <p class="text-prewrap">{{ selected.final_description }}</p>
+    <div class="row g-3">
+      <div class="col-md-6"><div class="small text-muted">Логика</div><div class="text-prewrap">{{ selected.final_logic }}</div></div>
+      <div class="col-md-6"><div class="small text-muted">Критерии</div><div class="text-prewrap">{{ selected.final_criteria }}</div></div>
+    </div>
+  </div>
+</div>
+
+{% if responses %}
+  {{ render_cards(responses, 'item2') }}
+{% else %}
+  <div class="alert alert-danger d-flex justify-content-between align-items-center gap-3">
+    <span>Ошибка обработки ответа AI. Попробуйте ещё раз.</span>
+    <a class="btn btn-danger" href="{{ url_for('agent2', selected_id=selected.id) }}">Повторить</a>
+  </div>
+{% endif %}
+
+<div class="sticky-actions border rounded-4 bg-white shadow-lg p-3 mt-5">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+    <div class="text-muted small">Выберите один или несколько итоговых пунктов либо добавьте собственный.</div>
+    <div class="d-flex flex-column flex-sm-row gap-2">
+      <button class="btn btn-outline-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#customItemModal">➕ Добавить свой пункт</button>
+      <form method="post" action="{{ url_for('agent2_finish', selected_id=selected.id) }}">
+        <button id="continueButton" class="btn {{ 'btn-success' if accepted else 'btn-secondary' }} btn-lg" type="submit" {% if not accepted %}disabled{% endif %}>Завершить →</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="customItemModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <form method="post" action="{{ url_for('item2_custom', selected_id=selected.id) }}">
+        <div class="modal-header">
+          <h5 class="modal-title">Добавить свой итоговый пункт</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Название</label>
+            <input class="form-control" name="title" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Описание</label>
+            <textarea class="form-control" name="description" rows="3" required></textarea>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Логика</label>
+              <textarea class="form-control" name="logic" rows="4" required></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Критерии</label>
+              <textarea class="form-control" name="criteria" rows="4" required></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-primary">Добавить и выбрать</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

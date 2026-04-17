@@ -1,0 +1,51 @@
+{% macro render_cards(items, action_prefix) %}
+  {% for item in items %}
+    {% set edit = item.edit if action_prefix == 'item1' else none %}
+    {% set shown_title = edit.edited_title if edit else item.title %}
+    {% set shown_description = edit.edited_description if edit else item.description %}
+    {% set shown_logic = edit.edited_logic if edit else item.logic %}
+    {% set shown_criteria = edit.edited_criteria if edit else item.criteria %}
+    {% set edited = edit or (action_prefix == 'item2' and item.was_edited) %}
+    <div class="card option-card mb-3 shadow-sm status-{{ item.status }}
+     {% if item.status == 'accepted' %}border-success{% elif item.status == 'rejected' %}border-danger rejected-card{% endif %}
+     {% if item.implemented %}border-success implemented-card{% endif %}"
+         data-card data-id="{{ item.id }}" data-action-prefix="{{ action_prefix }}" data-status="{{ item.status }}">
+      <div class="card-header bg-white d-flex flex-column flex-lg-row gap-2 align-items-lg-center justify-content-between">
+        <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
+          <span class="badge text-bg-secondary">Раунд {{ item.round_number if action_prefix == 'item1' else 1 }} · Вариант {{ item.item_number }}</span>
+          <input class="form-control form-control-sm border-0 fw-semibold fs-5 editable field-title title-input" name="title" value="{{ shown_title }}" readonly>
+        </div>
+        <div class="badge-zone d-flex gap-2">
+            {% if item.status == 'accepted' %}<span class="badge text-bg-success selected-badge">Выбрано ✓</span>{% endif %}
+            {% if item.status == 'rejected' %}<span class="badge text-bg-danger rejected-badge">Отклонено</span>{% endif %}
+            {% if edited %}<span class="badge text-bg-warning changed-badge">✏️ Изменено</span>{% endif %}
+
+            {% if item.implemented %}
+              <span class="badge text-bg-danger">Реализована</span>
+            {% endif %}
+</div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-semibold">Описание</label>
+            <textarea class="form-control editable field-description" name="description" rows="4" readonly>{{ shown_description }}</textarea>
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label fw-semibold">Логика</label>
+            <textarea class="form-control editable field-logic" name="logic" rows="5" readonly>{{ shown_logic }}</textarea>
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label fw-semibold">Критерии</label>
+            <textarea class="form-control editable field-criteria" name="criteria" rows="5" readonly>{{ shown_criteria }}</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer bg-white d-flex flex-wrap gap-2">
+        <button class="btn btn-outline-success" type="button" data-action="accept" {% if item.status == 'rejected' %}disabled{% endif %}>✅ Выбрать</button>
+        <button class="btn btn-outline-warning" type="button" data-action="edit" {% if item.status == 'rejected' %}disabled{% endif %}>✏️ Редактировать</button>
+        <button class="btn btn-outline-danger" type="button" data-action="reject" {% if item.status == 'rejected' %}disabled{% endif %}>❌ Отклонить</button>
+      </div>
+    </div>
+  {% endfor %}
+{% endmacro %}

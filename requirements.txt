@@ -1,0 +1,9 @@
+flask
+flask_sqlalchemy
+sqlalchemy
+openai
+python-dotenv
+requests
+itsdangerous
+reportlab
+pandas
