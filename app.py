@@ -195,7 +195,6 @@ PROMPT_A_DESC = """Ты — бизнес консультант с 20-летним опытом работы с корпорати
 Стратегии не должны дублировать друг друга по смыслу.
 Не придумывай факты, которых нет во входных данных.
 Все стратегии должны быть применимы на практике.
-Сравни стратегии с уже сохраненными из списка - 
 """
 
 PROMPT_A = os.environ.get(
@@ -223,8 +222,6 @@ new_df = new_df.values.tolist()
 for el in new_df:
     PROMPT_B_DESC += el + "\n"
 
-PROMPT_B_DESC += "\n" + """Сравни шаги с уже сохраненными из списка - 
-"""
 
 PROMPT_B = os.environ.get(
     "PROMPT_B",
@@ -387,6 +384,52 @@ def call_openai(system_prompt, user_message):
     return normalize_items(response.choices[0].message.content or "")
 
 
+def call_openai_check_str(item, results):
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not configured")
+    client = OpenAI(api_key=api_key, timeout=60)
+    system_prompt = """Ты на вход получишь одну или несколько стратегий. 
+    Сравни стратегии, которые тебе передали, с уже существующими из списка по названию - 
+    """
+    for el in results:
+        system_prompt += el['title'] + "\n"
+    system_prompt += """Если стратегия есть в этом списке или что-то похожее, то пометь как Реализована.
+    ВАЖНО верни те же самые данные, которые ты получил с изменением только одного поля implemented"""
+    response = client.chat.completions.create(
+        model="gpt-5.4-mini",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": f"{system_prompt.strip()}\n\n{JSON_INSTRUCTIONS.strip()}"},
+            {"role": "user", "content": item},
+        ],
+    )
+    return normalize_items(response.choices[0].message.content or "")
+
+
+def call_openai_check_stp(item, results):
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not configured")
+    client = OpenAI(api_key=api_key, timeout=60)
+    system_prompt = """Ты на вход получишь один или несколько шагов
+    Сравни стратегию или шаг, которую тебе передали, с уже существующими из списка по названию - 
+    """
+    for el in results:
+        system_prompt += el['title'] + "\n"
+    system_prompt += """Если стратегия или шаг есть в этом списке или что-то похожее, то пометь как Реализована.
+    ВАЖНО верни те же самые данные, которые ты получил с изменением только одного поля implemented"""
+    response = client.chat.completions.create(
+        model="gpt-5.4-mini",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": f"{system_prompt.strip()}\n\n{JSON_INSTRUCTIONS.strip()}"},
+            {"role": "user", "content": item},
+        ],
+    )
+    return normalize_items(response.choices[0].message.content or "")
+
+
 def final_agent1_payload(response):
     if response.edit:
         return {
@@ -465,21 +508,13 @@ def create_more_agent1_responses(input_id):
     strategies = Agent1Selected.query.all()
     result = [
         {
-            "title": s.final_title,
-            "description": s.final_description
+            "title": s.final_title
         }
         for s in strategies
     ]
-
-    prompt_a_desc = PROMPT_A
-    for el in result:
-        prompt_a_desc += el["title"] + "\n"
-
-
-    prompt_a_desc += """Если стратегия совпадает по названию и смыслу с любой из списка,
-даже если формулировка отличается — пометь ее как Реализована."""
-    items = call_openai(prompt_a_desc, message)
-    for item in items:
+    items = call_openai(PROMPT_A, message)
+    final_items = call_openai_check_str(items, result)
+    for item in final_items:
         db.session.add(Agent1Response(input_id=input_id, round_number=next_round, status="pending", **item))
 
 
@@ -505,15 +540,10 @@ def create_more_agent2_responses(selected_id):
         }
         for s in steps
     ]
-
-    prompt_b_desc = PROMPT_B
-    for el in result:
-        prompt_b_desc += el["title"] + "\n"
-    prompt_b_desc += """Если шаг совпадает по названию или смыслу с любым из списка,
-    даже если формулировка отличается — пометь его как Реализована."""
-    items = call_openai(prompt_b_desc, message)
+    items = call_openai(PROMPT_B, message)
+    final_items = call_openai_check_stp(items, result)
     start_number = max([item.item_number for item in previous], default=0)
-    for index, item in enumerate(items, start=1):
+    for index, item in enumerate(final_items, start=1):
         item["item_number"] = start_number + index
         db.session.add(Agent2Response(selected_id=selected_id, status="pending", **item))
 
@@ -751,26 +781,20 @@ def register_routes(app):
         strategies = Agent1Selected.query.all()
         result = [
             {
-                "title": s.final_title,
-                "description": s.final_description
+                "title": s.final_title
             }
             for s in strategies
         ]
 
-        prompt_a_desc = PROMPT_A
-        for el in result:
-            prompt_a_desc += el["title"] + "\n"
-        prompt_a_desc += """Если стратегия совпадает по названию и смыслу с любой из списка,
-даже если формулировка отличается — пометь ее как Реализована."""
-
 
         try:
-            items = call_openai(prompt_a_desc, input_text)
+            items = call_openai(PROMPT_A, input_text)
             # Если AI вернул пустой список, не считаем это аварийной ошибкой
             if not items:
                 flash("AI не смог предложить варианты для этого запроса. Попробуйте переформулировать.", "warning")
                 return redirect(auth_url("review", input_id=user_input.id))
-            for item in items:
+            final_items = call_openai_check_str(items, result)
+            for item in final_items:
                 db.session.add(
                     Agent1Response(
                         input_id=user_input.id,
@@ -980,15 +1004,10 @@ def register_routes(app):
                 for s in steps
             ]
 
-            prompt_b_desc = PROMPT_B
-            for el in result:
-                prompt_b_desc += el["title"] + "\n"
-            prompt_b_desc += """Если шаг совпадает по названию или смыслу с любым из списка,
-                даже если формулировка отличается — пометь его как Реализована."""
-
             try:
-                items = call_openai(prompt_b_desc, message)
-                for item in items:
+                items = call_openai(PROMPT_B, message)
+                final_items = call_openai_check_stp(items, result)
+                for item in final_items:
                     db.session.add(Agent2Response(selected_id=selected_id, status="pending", **item))
                 db.session.commit()
                 responses = Agent2Response.query.filter_by(selected_id=selected_id).order_by(Agent2Response.item_number.asc()).all()
