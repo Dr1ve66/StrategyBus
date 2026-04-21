@@ -422,11 +422,12 @@ def call_openai_check_str(item):
 
     results = [
         {
-            "title": row["strateg_nm"],
-            "description": row["logic"]
+            "title": str(row["strateg_nm"]) if pd.notna(row["strateg_nm"]) else "",
+            "description": str(row["logic"]) if pd.notna(row["logic"]) else ""
         }
         for _, row in df.iterrows()
     ]
+
 
     for el in results:
         system_prompt += "Название стратегии: " + el['title'] + "; Логика: " + el["description"] + "\n"
@@ -455,7 +456,7 @@ def call_openai_check_stp(item):
 
     df = pd.read_excel('steps.xlsx')
 
-    results = [{"title": row} for row in df["steps"] if pd.notna(row)]
+    results = [{"title": row if pd.notna(row) else ""} for row in df["steps"]]
 
     for el in results:
         system_prompt += el['title'] + "\n"
