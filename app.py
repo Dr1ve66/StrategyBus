@@ -410,16 +410,26 @@ def call_openai(system_prompt, user_message):
     return normalize_items(response.choices[0].message.content or "")
 
 
-def call_openai_check_str(item, results):
+def call_openai_check_str(item):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not configured")
     client = OpenAI(api_key=api_key, timeout=60)
     system_prompt = """Ты на вход получишь одну или несколько стратегий. 
-    Сравни стратегии, которые тебе передали, с уже существующими из списка по названию - 
+    Сравни стратегии, которые тебе передали, с уже существующими из списка по названию и логике - 
     """
+    df = pd.read_excel('strategies.xlsx')
+
+    results = [
+        {
+            "title": row["strateg_nm"],
+            "description": row["logic"]
+        }
+        for _, row in df.iterrows()
+    ]
+
     for el in results:
-        system_prompt += el['title'] + "\n"
+        system_prompt += "Название стратегии: " + el['title'] + "; Логика: " + el["description"] + "\n"
     system_prompt += """Если стратегия есть в этом списке или что-то похожее, то пометь как Реализована.
     ВАЖНО верни те же самые данные, которые ты получил с изменением только одного поля implemented"""
     message = json.dumps(item, ensure_ascii=False)
@@ -434,7 +444,7 @@ def call_openai_check_str(item, results):
     return normalize_items(response.choices[0].message.content or "")
 
 
-def call_openai_check_stp(item, results):
+def call_openai_check_stp(item):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not configured")
@@ -442,6 +452,11 @@ def call_openai_check_stp(item, results):
     system_prompt = """Ты на вход получишь один или несколько шагов
     Сравни стратегию или шаг, которую тебе передали, с уже существующими из списка по названию - 
     """
+
+    df = pd.read_excel('steps.xlsx')
+
+    results = [{"title": row} for row in df["steps"] if pd.notna(row)]
+
     for el in results:
         system_prompt += el['title'] + "\n"
     system_prompt += """Если стратегия или шаг есть в этом списке или что-то похожее, то пометь как Реализована.
