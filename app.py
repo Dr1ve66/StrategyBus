@@ -548,15 +548,8 @@ def create_more_agent1_responses(input_id):
 
 Предложи еще один вариант, который отличается от предыдущих.Формат ответа такой же JSON."""
 
-    strategies = Agent1Selected.query.all()
-    result = [
-        {
-            "title": s.final_title
-        }
-        for s in strategies
-    ]
     items = call_openai(PROMPT_A, message)
-    final_items = call_openai_check_str(items, result)
+    final_items = call_openai_check_str(items)
     for item in final_items:
         db.session.add(Agent1Response(input_id=input_id, round_number=next_round, status="pending", **item))
 
@@ -575,16 +568,9 @@ def create_more_agent2_responses(selected_id):
 
 Предложи до 10 новых, принципиально других вариантов. Не повторяй предыдущие.
 Формат ответа такой же JSON."""
-    steps = Agent2Final.query.all()
-    result = [
-        {
-            "title": s.final_title,
-            "description": s.final_description
-        }
-        for s in steps
-    ]
+
     items = call_openai(PROMPT_B, message)
-    final_items = call_openai_check_stp(items, result)
+    final_items = call_openai_check_stp(items)
     start_number = max([item.item_number for item in previous], default=0)
     for index, item in enumerate(final_items, start=1):
         item["item_number"] = start_number + index
@@ -842,21 +828,13 @@ def register_routes(app):
         db.session.add(user_input)
         db.session.commit()
 
-        strategies = Agent1Selected.query.all()
-        result = [
-            {
-                "title": s.final_title
-            }
-            for s in strategies
-        ]
-
         try:
             items = call_openai(PROMPT_A, input_text)
             if not items:
                 flash("AI не смог предложить варианты для этого запроса. Попробуйте переформулировать.", "warning")
                 return redirect(auth_url("review", input_id=user_input.id))
 
-            final_items = call_openai_check_str(items, result)
+            final_items = call_openai_check_str(items)
             for item in final_items:
                 db.session.add(
                     Agent1Response(
@@ -1069,7 +1047,7 @@ def register_routes(app):
 
             try:
                 items = call_openai(PROMPT_B, message)
-                final_items = call_openai_check_stp(items, result)
+                final_items = call_openai_check_stp(items)
                 for item in final_items:
                     db.session.add(Agent2Response(selected_id=selected_id, status="pending", **item))
                 db.session.commit()
