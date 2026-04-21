@@ -1,10 +1,13 @@
 {% extends 'base.html' %}
 {% from '_cards.html' import render_cards %}
+
 {% block content %}
 <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
   <div>
     <h1 class="h2 fw-bold">Варианты Стратегий Агента 1</h1>
-    <p class="text-muted mb-0">Можно выбрать только 1 пункт. Агент возвращает 3 варианта; если отклонить все, он автоматически предложит следующий набор.</p>
+    <p class="text-muted mb-0">
+      Можно выбрать только 1 пункт. Агент возвращает 3 варианта; если отклонить все, он автоматически предложит следующий набор.
+    </p>
   </div>
   <a class="btn btn-outline-secondary align-self-start" href="{{ url_for('index') }}">➕ Новый запрос</a>
 </div>
@@ -19,7 +22,9 @@
 {% if not rounds %}
   <div class="alert alert-danger d-flex justify-content-between align-items-center gap-3">
     <span>Ошибка обработки ответа AI. Попробуйте ещё раз.</span>
-    <form method="post" action="{{ url_for('more', input_id=user_input.id) }}" data-ai-form><button class="btn btn-danger">Повторить</button></form>
+    <form method="post" action="{{ url_for('more', input_id=user_input.id) }}" data-ai-form>
+      <button class="btn btn-danger" type="submit">Повторить</button>
+    </form>
   </div>
 {% endif %}
 
@@ -34,10 +39,50 @@
   <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
     <div class="text-muted small">Выберите один из пунктов либо добавьте собственный пункт.</div>
     <div class="d-flex flex-column flex-sm-row gap-2">
-      <button class="btn btn-outline-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#customItemModal">➕ Добавить свой пункт</button>
-      <form method="post" action="{{ url_for('continue_agent1', input_id=user_input.id) }}">
-        <button id="continueButton" class="btn {{ 'btn-success' if accepted else 'btn-secondary' }} btn-lg w-100" type="submit" {% if not accepted %}disabled{% endif %}>Продолжить →</button>
+      <button
+        class="btn btn-outline-primary btn-lg"
+        type="button"
+        data-bs-toggle="modal"
+        data-bs-target="#customItemModal"
+      >
+        ➕ Добавить свой пункт
+      </button>
+
+      <form id="continueAgentForm" method="post" action="{{ url_for('continue_agent1', input_id=user_input.id) }}">
+        <button
+          id="continueButton"
+          class="btn {{ 'btn-success' if accepted else 'btn-secondary' }} btn-lg w-100"
+          type="submit"
+          {% if not accepted %}disabled{% endif %}
+        >
+          Продолжить →
+        </button>
       </form>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="agent2LoadingModal"
+  tabindex="-1"
+  aria-hidden="true"
+  data-bs-backdrop="static"
+  data-bs-keyboard="false"
+>
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-body text-center py-5 px-4">
+        <div
+          class="spinner-border text-primary mb-3"
+          style="width: 3rem; height: 3rem;"
+          role="status"
+        >
+          <span class="visually-hidden">Загрузка...</span>
+        </div>
+        <h5 class="mb-2">Идет AI генерация плана действий</h5>
+        <div class="text-muted small">Пожалуйста, подождите...</div>
+      </div>
     </div>
   </div>
 </div>
@@ -78,4 +123,27 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const continueForm = document.getElementById("continueAgentForm");
+    const continueButton = document.getElementById("continueButton");
+    const modalElement = document.getElementById("agent2LoadingModal");
+
+    if (!continueForm || !continueButton || !modalElement || typeof bootstrap === "undefined") {
+      return;
+    }
+
+    const loadingModal = new bootstrap.Modal(modalElement, {
+      backdrop: "static",
+      keyboard: false
+    });
+
+    continueForm.addEventListener("submit", function () {
+      continueButton.disabled = true;
+      continueButton.innerHTML = "Генерация...";
+      loadingModal.show();
+    });
+  });
+</script>
 {% endblock %}
