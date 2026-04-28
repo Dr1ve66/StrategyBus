@@ -174,6 +174,15 @@ class ProductGuide(db.Model):
     problems = db.Column(db.Text, nullable=False)  # Какие проблемы помогает решить
 
 
+class Clarification(db.Model):
+    __tablename__ = "clarifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    input_id = db.Column(db.Integer, db.ForeignKey("user_inputs.id"))
+    questions = db.Column(db.Text)  # JSON
+    answers = db.Column(db.Text)    # JSON
+    status = db.Column(db.String(20), default="pending")
+
 PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летним опытом работы с корпоративными клиентами.
 
 Твоя задача: сформировать 3 стратегии для клиента на основе входных данных.
@@ -375,11 +384,44 @@ JSON_INSTRUCTIONS = """
     "criteria": "Критерии оценки / применения",
     "implemented": "Флаг реализации (ОБЯЗАТЕЛЬНО ЗАПОЛНИТЬ значением Реализована или Не реализована)"
   },
-  {"id": 2, "title": "", "description": "", "logic": "", "criteria": "", "implemented": ""}},
-  {"id": 3, "title": "", "description": "", "logic": "", "criteria": "", "implemented": ""}}
+  {"id": 2, "title": "", "description": "", "logic": "", "criteria": "", "implemented": ""},
+  {"id": 3, "title": "", "description": "", "logic": "", "criteria": "", "implemented": ""}
 ]}
 Никакого текста вне JSON.
 """
+
+
+PROMPT_CLARIFY = """
+Ты — бизнес-аналитик.
+
+Твоя задача:
+1. Проверить входные данные клиента
+2. Определить, достаточно ли информации для разработки стратегий
+
+Если информации достаточно:
+верни:
+{"status": "ok"}
+
+Если информации недостаточно:
+верни:
+{
+  "status": "need_clarification",
+  "questions": [
+    {
+      "question": "Текст вопроса",
+      "options": ["вариант 1", "вариант 2", "вариант 3"]
+    }
+  ]
+}
+
+Правила:
+- максимум 5 вопросов
+- вопросы должны критически влиять на стратегию
+- варианты ответа должны быть конкретными
+- не задавай очевидные или повторяющиеся вопросы
+"""
+
+
 
 def to_bool(value):
     if isinstance(value, bool):
@@ -510,7 +552,7 @@ def call_openai(system_prompt, user_message):
         raise RuntimeError("OPENAI_API_KEY is not configured")
     client = OpenAI(api_key=api_key, timeout=60)
     response = client.chat.completions.create(
-        model="gpt-5.4",
+        model="gpt-5.4-mini",
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": f"{system_prompt.strip()}\n\n{JSON_INSTRUCTIONS.strip()}"},
@@ -518,6 +560,22 @@ def call_openai(system_prompt, user_message):
         ],
     )
     return normalize_items(response.choices[0].message.content or "")
+
+
+def call_openai_raw(system_prompt, user_message):
+    api_key = os.environ.get("OPENAI_API_KEY")
+    client = OpenAI(api_key=api_key, timeout=60)
+
+    response = client.chat.completions.create(
+        model="gpt-5.4-mini",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ],
+    )
+
+    return json.loads(response.choices[0].message.content)
 
 
 def call_openai_check_str(item):
@@ -655,7 +713,7 @@ def validate_custom_item(fields, prompt_type):
     if not api_key:
         return True, ""  # если ключа нет — пропускаем проверку
 
-    base_prompt = PROMPTA if prompt_type == "agent1" else PROMPTB
+    base_prompt = PROMPT_A if prompt_type == "agent1" else PROMPT_B
 
     system_prompt = f"""Ты — строгий валидатор. Тебе дан промпт с правилами для генерации вариантов:
 
@@ -740,6 +798,20 @@ def next_agent2_item_number(selected_id):
     return max([item.item_number for item in Agent2Response.query.filter_by(selected_id=selected_id).all()], default=0) + 1
 
 
+def build_final_input(user_input, clarification):
+    base = user_input.input_text
+
+    if clarification and clarification.answers:
+        answers = json.loads(clarification.answers)
+
+        extra = "\n".join([
+            f"{k}: {v}" for k, v in answers.items()
+        ])
+
+        return base + "\n\nУточнения:\n" + extra
+
+    return base
+
 def build_results_pdf(selected, final):
     buffer = BytesIO()
     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
@@ -822,45 +894,6 @@ def build_results_pdf(selected, final):
     story.append(Paragraph(agent1_text, styles["RuBody"]))
     story.append(Spacer(1, 12))
 
-    def add_block(title, item):
-        story.append(Paragraph(title, styles["RuHeading"]))
-
-        item_title = item.final_title or ""
-        item_description = (item.final_description or "").replace("\n", "<br/>")
-        item_logic = (item.final_logic or "").replace("\n", "<br/>")
-        item_criteria = (item.final_criteria or "").replace("\n", "<br/>")
-
-        data = [
-            [Paragraph("Название", styles["RuBody"]), Paragraph(item_title, styles["RuBody"])],
-            [Paragraph("Описание", styles["RuBody"]), Paragraph(item_description, styles["RuBody"])],
-            [Paragraph("Логика", styles["RuBody"]), Paragraph(item_logic, styles["RuBody"])],
-            [Paragraph("Критерии", styles["RuBody"]), Paragraph(item_criteria, styles["RuBody"])],
-        ]
-
-        table = Table(data, colWidths=[32 * mm, 128 * mm])
-        table.setStyle(
-            TableStyle(
-                [
-                    ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
-                    ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f1f5f9")),
-                    ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#cbd5e1")),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                ]
-            )
-        )
-        story.append(table)
-        story.append(Spacer(1, 8))
-
-    add_block("Выбор Агента 1", selected)
-    add_block("Результат Агента 2", final)
-
-    doc.build(story)
-    buffer.seek(0)
-    return buffer
 
 def add_block(title, item):
     story.append(Paragraph(title, styles["RuHeading"]))
@@ -992,29 +1025,84 @@ def register_routes(app):
         db.session.commit()
 
         try:
-            items = call_openai(PROMPT_A, input_text)
-            if not items:
-                flash("AI не смог предложить варианты для этого запроса. Попробуйте переформулировать.", "warning")
-                return redirect(auth_url("review", input_id=user_input.id))
+            clarify = call_openai_raw(PROMPT_CLARIFY, input_text)
+            if clarify.get("status") == "need_clarification":
+                # сохраняем вопросы
+                db.session.add(Clarification(
+                    input_id=user_input.id,
+                    questions=json.dumps(clarify["questions"])
+                ))
+                db.session.commit()
 
+                return redirect(url_for("clarify", input_id=user_input.id))
+
+        except Exception as e:
+            db.session.rollback()
+            print("AI ERROR:", repr(e), flush=True)
+            flash_ai_error()
+            return redirect(url_for("index"))
+
+        return redirect(url_for("process_after_clarify", input_id=user_input.id))
+
+
+    @app.route("/clarify/<int:input_id>")
+
+    def clarify(input_id):
+        clarification = Clarification.query.filter_by(input_id=input_id).first()
+        if not clarification:
+            return redirect(url_for("process_after_clarify", input_id=input_id))
+        questions = json.loads(clarification.questions)
+        return render_template("clarify.html", questions=questions)
+
+    @app.route("/clarify/<int:input_id>", methods=["POST"])
+    @login_required
+    def clarify_submit(input_id):
+        clarification = Clarification.query.filter_by(input_id=input_id).first()
+
+        answers = request.form.to_dict()
+
+        clarification.answers = json.dumps(answers)
+
+        if "skip" in request.form:
+            clarification.status = "skipped"
+            clarification.answers = None
+        else:
+            clarification.status = "done"
+            clarification.answers = json.dumps(answers)
+
+        db.session.commit()
+        return redirect(url_for("process_after_clarify", input_id=input_id))
+
+    @app.route("/process_after_clarify/<int:input_id>")
+    @login_required
+    def process_after_clarify(input_id):
+        user_input = UserInput.query.get_or_404(input_id)
+        clarification = Clarification.query.filter_by(input_id=input_id).first()
+
+        final_input = build_final_input(user_input, clarification)
+
+        try:
+            items = call_openai(PROMPT_A, final_input)
             final_items = call_openai_check_str(items)
+
             for item in final_items:
-                db.session.add(
-                    Agent1Response(
-                        input_id=user_input.id,
-                        round_number=1,
-                        status="pending",
-                        **item,
-                    )
-                )
+                db.session.add(Agent1Response(
+                    input_id=input_id,
+                    round_number=1,
+                    status="pending",
+                    **item
+                ))
+
             db.session.commit()
+
         except Exception as e:
             db.session.rollback()
             print("AI ERROR:", repr(e), flush=True)
             flash_ai_error()
 
-        return redirect(auth_url("review", input_id=user_input.id))
-     
+        return redirect(url_for("review", input_id=input_id))
+
+
     @app.route("/review/<int:input_id>")
     @login_required
     def review(input_id):
