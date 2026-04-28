@@ -61,7 +61,7 @@ function applyAcceptedState(card) {
   card.classList.remove('border-danger', 'rejected-card', 'dimmed-card');
   card.classList.add('border-success');
   removeBadge(card, 'rejected-badge');
-  ensureBadge(card, 'selected-badge', 'Р’С‹Р±СЂР°РЅРѕ вњ“', 'text-bg-success');
+  ensureBadge(card, 'selected-badge', 'Выбрано ?', 'text-bg-success');
   disableCardButtons(card, false);
   setContinue(true);
 }
@@ -71,7 +71,7 @@ function applyRejectedState(card) {
   card.classList.remove('border-success', 'editing-card');
   card.classList.add('border-danger', 'rejected-card');
   removeBadge(card, 'selected-badge');
-  ensureBadge(card, 'rejected-badge', 'РћС‚РєР»РѕРЅРµРЅРѕ', 'text-bg-danger');
+  ensureBadge(card, 'rejected-badge', 'Отклонено', 'text-bg-danger');
   disableCardButtons(card, true);
   setContinue(hasAcceptedCards());
 }
@@ -82,7 +82,7 @@ function setEditing(card, editing) {
     field.readOnly = !editing;
   });
   const button = card.querySelector('[data-action="edit"]');
-  if (button) button.textContent = editing ? 'рџ’ѕ РЎРѕС…СЂР°РЅРёС‚СЊ' : 'вњЏпёЏ Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ';
+  if (button) button.textContent = editing ? '?? Сохранить' : '?? Редактировать';
 }
 
 function collectFields(card) {
@@ -120,24 +120,26 @@ function bindCardActions() {
             }
             await postJson(`/${prefix}/save/${id}`, collectFields(card));
             setEditing(card, false);
-            ensureBadge(card, 'changed-badge', 'вњЏпёЏ РР·РјРµРЅРµРЅРѕ', 'text-bg-warning');
+            ensureBadge(card, 'changed-badge', '?? Изменено', 'text-bg-warning');
             return;
           }
-    if (action === 'accept') {
-      await postJson(`/${prefix}/accept/${id}`);
+          if (action === 'accept') {
+            await postJson(`/${prefix}/accept/${id}`);
 
-      // РЎР±СЂР°СЃС‹РІР°РµРј РІСЃРµ РѕСЃС‚Р°Р»СЊРЅС‹Рµ РєР°СЂС‚РѕС‡РєРё С‚РѕРіРѕ Р¶Рµ Р°РіРµРЅС‚Р°
-      document.querySelectorAll(`[data-card][data-action-prefix="${prefix}"]`).forEach((otherCard) => {
-        if (otherCard.dataset.id !== id && otherCard.dataset.status === 'accepted') {
-          otherCard.dataset.status = 'pending';
-          otherCard.classList.remove('border-success');
-          removeBadge(otherCard, 'selected-badge');
-        }
-      });
+            // Для item1 — одиночный выбор, сбрасываем остальные карточки
+            if (prefix === 'item1') {
+              document.querySelectorAll(`[data-card][data-action-prefix="${prefix}"]`).forEach((otherCard) => {
+                if (otherCard.dataset.id !== id && otherCard.dataset.status === 'accepted') {
+                  otherCard.dataset.status = 'pending';
+                  otherCard.classList.remove('border-success');
+                  removeBadge(otherCard, 'selected-badge');
+                }
+              });
+            }
 
-      applyAcceptedState(card);
-      return;
-    }
+            applyAcceptedState(card);
+            return;
+          }
           if (action === 'reject') {
             const shouldShowOverlay = isLastRejectableCard(card);
             if (shouldShowOverlay) showAiOverlay();
@@ -166,8 +168,68 @@ function bindAiForms() {
   });
 }
 
+function bindCustomForms() {
+  document.querySelectorAll('[data-custom-form]').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const errorDiv = form.querySelector('.validation-error');
+      if (errorDiv) errorDiv.classList.add('d-none');
+
+      const submitBtn = form.querySelector('[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Проверка...';
+      }
+
+      const authToken = new URLSearchParams(window.location.search).get('_auth');
+      let url = form.action;
+      if (authToken) {
+        url += (url.includes('?') ? '&' : '?') + '_auth=' + encodeURIComponent(authToken);
+      }
+
+      const formData = new FormData(form);
+      const body = Object.fromEntries(formData.entries());
+
+      try {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const result = await resp.json();
+
+        if (resp.status === 422) {
+          // Вариант не прошёл проверку — показываем причину
+          if (errorDiv) {
+            errorDiv.textContent = result.reason || 'Вариант не соответствует правилам.';
+            errorDiv.classList.remove('d-none');
+          }
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Добавить и выбрать';
+          }
+          return;
+        }
+
+        if (result.ok) {
+          window.location.reload();
+        }
+      } catch (err) {
+        showErrorToast();
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Добавить и выбрать';
+        }
+      }
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initializePersistedState();
   bindCardActions();
   bindAiForms();
+  bindCustomForms();
 });

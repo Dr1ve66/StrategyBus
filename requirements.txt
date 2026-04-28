@@ -7,3 +7,4 @@ requests
 itsdangerous
 reportlab
 pandas
+openpyxl

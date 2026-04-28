@@ -1,9 +1,18 @@
 body {
-  background: #f6f7fb;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.80), rgba(255, 255, 255, 0.80)),
+    url("../images/Picture.png") center center / cover no-repeat fixed;
+  background-color: #f5f7fb;
 }
 
 .page-shell {
-  padding-bottom: 8rem;
+  min-height: calc(100vh - 90px);
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .min-vh-75 {
