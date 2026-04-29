@@ -1,74 +1,87 @@
-    .container {
-        max-width: 800px;
-        margin: 40px auto;
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
+{% extends "base.html" %}
 
-    h1 {
-        margin-bottom: 20px;
-    }
+{% block content %}
+<div class="container" style="max-width: 700px;">
 
-    .question {
-        margin-bottom: 25px;
-    }
+    <h1 style="margin-bottom: 8px;">Уточняющие вопросы</h1>
+    <p style="color:#6b7280; margin-bottom: 24px;">
+        Ответьте на несколько вопросов — это поможет сформировать более точные рекомендации
+    </p>
 
-    .question-title {
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
+    <form method="POST">
 
-    .option {
-        margin-bottom: 5px;
-    }
+        {% for q in questions %}
+            <div class="question-card" style="
+                background: #ffffff;
+                padding: 16px;
+                border-radius: 12px;
+                margin-bottom: 16px;
+                border: 1px solid #e5e7eb;
+            ">
 
-    button {
-        margin-top: 20px;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 6px;
-        background: #2563eb;
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-    }
-
-    button:hover {
-        background: #1e40af;
-    }
-
-    .skip {
-        background: #9ca3af;
-        margin-left: 10px;
-    }
-
-    .skip:hover {
-        background: #6b7280;
-    }
-</style>
-<form method="POST">
-    {% for q in questions %}
-        <div class="question">
-            <div class="question-title">
-                {{ loop.index }}. {{ q.question }}
-            </div>
-
-            {% for option in q.options %}
-                <div class="option">
-                    <label>
-                        <input type="radio"
-                               name="q{{ loop.parent.index }}"
-                               value="{{ option }}"
-                               required>
-                        {{ option }}
-                    </label>
+                <div class="question-title" style="
+                    font-weight: 600;
+                    margin-bottom: 10px;
+                ">
+                    {{ loop.index }}. {{ q.question }}
                 </div>
-            {% endfor %}
-        </div>
-    {% endfor %}
 
-    <button type="submit">Продолжить</button>
-    <button type="submit" name="skip" value="1" class="skip">Пропустить</button>
-</form>
+                <select name="{{ q.key }}" class="select" required
+                        style="width:100%; padding:10px; border-radius:8px; border:1px solid #d1d5db;"
+                        onchange="toggleCustomInput(this, '{{ q.key }}')">
+
+                    <option value="" disabled selected>Выберите вариант</option>
+
+                    {% for option in q.options %}
+                        <option value="{{ option }}">{{ option }}</option>
+                    {% endfor %}
+
+                    <option value="custom">Свой вариант…</option>
+                </select>
+
+                <input type="text"
+                       name="{{ q.key }}_custom"
+                       class="custom-input"
+                       placeholder="Введите свой вариант"
+                       style="
+                           display:none;
+                           margin-top:10px;
+                           width:100%;
+                           padding:10px;
+                           border-radius:8px;
+                           border:1px solid #d1d5db;
+                       ">
+
+            </div>
+        {% endfor %}
+
+        <div class="actions" style="margin-top: 24px;">
+            <button type="submit" class="btn-primary" style="
+                width:100%;
+                padding:12px;
+                border-radius:10px;
+                font-weight:600;
+            ">
+                Продолжить
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+function toggleCustomInput(select, key) {
+    const input = document.querySelector(`input[name="${key}_custom"]`);
+
+    if (select.value === "custom") {
+        input.style.display = "block";
+        input.required = true;
+        input.focus();
+    } else {
+        input.style.display = "none";
+        input.required = false;
+        input.value = "";
+    }
+}
+</script>
+{% endblock %}

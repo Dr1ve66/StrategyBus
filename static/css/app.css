@@ -3,6 +3,24 @@ body {
     linear-gradient(rgba(255, 255, 255, 0.80), rgba(255, 255, 255, 0.80)),
     url("../images/Picture.png") center center / cover no-repeat fixed;
   background-color: #f5f7fb;
+  font-family: "DejaVu Sans", "Arial", sans-serif;
+}
+
+.select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+}
+
+.custom-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
 }
 
 .page-shell {

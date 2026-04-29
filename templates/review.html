@@ -14,8 +14,20 @@
 
 <div class="card border-0 bg-light mb-4 rounded-4">
   <div class="card-body">
+
     <div class="small text-muted mb-1">Исходный запрос</div>
-    <div class="fw-medium text-prewrap">{{ user_input.input_text }}</div>
+    <div class="fw-medium text-prewrap mb-3">
+      {{ user_input.input_text }}
+    </div>
+
+
+{% if parsed_clarification %}
+    <div class="block">
+        <h3>Уточнения</h3>
+        <p style="white-space: pre-line;">{{ parsed_clarification }}</p>
+    </div>
+{% endif %}
+
   </div>
 </div>
 
@@ -73,11 +85,7 @@
   <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content rounded-4 border-0 shadow">
       <div class="modal-body text-center py-5 px-4">
-        <div
-          class="spinner-border text-primary mb-3"
-          style="width: 3rem; height: 3rem;"
-          role="status"
-        >
+        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
           <span class="visually-hidden">Загрузка...</span>
         </div>
         <h5 class="mb-2">Идет AI генерация плана действий</h5>
@@ -95,15 +103,18 @@
           <h5 class="modal-title">Добавить свой пункт</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Название</label>
             <input class="form-control" name="title" required>
           </div>
+
           <div class="mb-3">
             <label class="form-label">Описание Стратегии</label>
             <textarea class="form-control" name="description" rows="3" required></textarea>
           </div>
+
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Логика</label>
@@ -115,6 +126,7 @@
             </div>
           </div>
         </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
           <button type="submit" class="btn btn-primary">Добавить и выбрать</button>

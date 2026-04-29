@@ -2,6 +2,7 @@
 import json
 import os
 import uuid
+from fileinput import filename
 from io import BytesIO
 from collections import defaultdict
 from datetime import datetime
@@ -20,6 +21,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+import textwrap
 
 load_dotenv()
 
@@ -403,22 +405,27 @@ PROMPT_CLARIFY = """
 {"status": "ok"}
 
 Если информации недостаточно:
-верни:
+Верни JSON строго формата:
+
 {
   "status": "need_clarification",
   "questions": [
     {
-      "question": "Текст вопроса",
-      "options": ["вариант 1", "вариант 2", "вариант 3"]
+      "key": "company_age",
+      "question": "Сколько лет компании?",
+      "options": ["<1 года", "1–3 года", "3–5 лет", "5+ лет"]
     }
   ]
 }
 
 Правила:
 - максимум 5 вопросов
+- максимум 3 варианта ответа на каждый вопрос
 - вопросы должны критически влиять на стратегию
 - варианты ответа должны быть конкретными
 - не задавай очевидные или повторяющиеся вопросы
+- key должен быть понятным (snake_case)
+- никаких q1, q2, q3
 """
 
 
@@ -564,13 +571,22 @@ def call_openai(system_prompt, user_message):
 
 def call_openai_raw(system_prompt, user_message):
     api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not configured")
+
     client = OpenAI(api_key=api_key, timeout=60)
 
+    # Добавляем инструкцию о JSON в системный промпт
+    enhanced_prompt = f"""{system_prompt.strip()}
+
+ВАЖНО: Ответь строго в формате JSON. Никакого текста вне JSON.
+"""
+
     response = client.chat.completions.create(
-        model="gpt-5.4-mini",
+        model="gpt-5.4-mini",  # ← Исправлено
         response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": enhanced_prompt},
             {"role": "user", "content": user_message},
         ],
     )
@@ -805,7 +821,8 @@ def build_final_input(user_input, clarification):
         answers = json.loads(clarification.answers)
 
         extra = "\n".join([
-            f"{k}: {v}" for k, v in answers.items()
+            f"{key}: {value if value else 'не указано'}"
+            for key, value in answers.items()
         ])
 
         return base + "\n\nУточнения:\n" + extra
@@ -1002,11 +1019,11 @@ def register_routes(app):
             flash("Заполните все 3 обязательных поля", "warning")
             return redirect(url_for("index"))
 
-        input_text = f"""
-    Размер компании: {company_size}
-    Отрасль компании: {company_industry}
-    Описание ситуации у компании: {situation_description}
-        """.strip()
+        input_text = input_text = (
+    f"Размер компании: {company_size}\n"
+    f"Отрасль компании: {company_industry}\n"
+    f"Описание ситуации у компании: {situation_description}"
+).strip()
 
         if product_name:
             input_text += f"""
@@ -1059,16 +1076,27 @@ def register_routes(app):
     def clarify_submit(input_id):
         clarification = Clarification.query.filter_by(input_id=input_id).first()
 
-        answers = request.form.to_dict()
+        raw = request.form.to_dict()
 
-        clarification.answers = json.dumps(answers)
+        answers = {}
+
+        for q in json.loads(clarification.questions):
+            key = q["key"]
+
+            selected_value = request.form.get(key)
+            custom_value = request.form.get(f"{key}_custom")
+
+            if selected_value == "custom":
+                answers[key] = custom_value
+            else:
+                answers[key] = selected_value
 
         if "skip" in request.form:
             clarification.status = "skipped"
             clarification.answers = None
         else:
             clarification.status = "done"
-            clarification.answers = json.dumps(answers)
+            clarification.answers = json.dumps(answers, ensure_ascii=False)
 
         db.session.commit()
         return redirect(url_for("process_after_clarify", input_id=input_id))
@@ -1102,19 +1130,64 @@ def register_routes(app):
 
         return redirect(url_for("review", input_id=input_id))
 
-
     @app.route("/review/<int:input_id>")
     @login_required
     def review(input_id):
         user_input = UserInput.query.get_or_404(input_id)
+
         responses = Agent1Response.query.filter_by(input_id=input_id).order_by(
-            Agent1Response.round_number.desc(), Agent1Response.item_number.asc()
+            Agent1Response.round_number.desc(),
+            Agent1Response.item_number.asc()
         ).all()
+
         rounds = defaultdict(list)
         for item in responses:
             rounds[item.round_number].append(item)
+
         accepted = any(item.status == "accepted" for item in responses)
-        return render_template("review.html", user_input=user_input, rounds=rounds, accepted=accepted)
+
+        clarification = Clarification.query.filter_by(input_id=input_id).first()
+
+        parsed_clarification = None
+
+        if clarification and clarification.questions and clarification.answers:
+            try:
+                questions = json.loads(clarification.questions)
+                answers = json.loads(clarification.answers)
+
+                merged = []
+
+                for q in questions:
+                    key = q.get("key")
+                    merged.append({
+                        "question": q.get("question"),
+                        "answer": answers.get(key)
+                    })
+
+                if clarification and clarification.questions and clarification.answers:
+                    questions = json.loads(clarification.questions)
+                    answers = json.loads(clarification.answers)
+
+                    text_lines = []
+                    for q in questions:
+                        key = q.get("key")
+                        text_lines.append(
+                            f"{q.get('question')}: {answers.get(key) or 'не указано'}"
+                        )
+
+                    parsed_clarification = "\n".join(text_lines)
+
+            except Exception:
+                parsed_clarification = None
+
+        return render_template(
+            "review.html",
+            user_input=user_input,
+            rounds=rounds,
+            accepted=accepted,
+            clarification=clarification,
+            parsed_clarification=parsed_clarification
+        )
 
     @app.route("/more/<int:input_id>", methods=["POST"])
     @login_required
@@ -1484,4 +1557,4 @@ app = create_app()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5000"))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=True)
