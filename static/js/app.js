@@ -61,7 +61,7 @@ function applyAcceptedState(card) {
   card.classList.remove('border-danger', 'rejected-card', 'dimmed-card');
   card.classList.add('border-success');
   removeBadge(card, 'rejected-badge');
-  ensureBadge(card, 'selected-badge', 'Выбрано ?', 'text-bg-success');
+  ensureBadge(card, 'selected-badge', 'Р’С‹Р±СЂР°РЅРѕ', 'text-bg-success');
   disableCardButtons(card, false);
   setContinue(true);
 }
@@ -71,7 +71,7 @@ function applyRejectedState(card) {
   card.classList.remove('border-success', 'editing-card');
   card.classList.add('border-danger', 'rejected-card');
   removeBadge(card, 'selected-badge');
-  ensureBadge(card, 'rejected-badge', 'Отклонено', 'text-bg-danger');
+  ensureBadge(card, 'rejected-badge', 'РћС‚РєР»РѕРЅРµРЅРѕ', 'text-bg-danger');
   disableCardButtons(card, true);
   setContinue(hasAcceptedCards());
 }
@@ -82,7 +82,7 @@ function setEditing(card, editing) {
     field.readOnly = !editing;
   });
   const button = card.querySelector('[data-action="edit"]');
-  if (button) button.textContent = editing ? '?? Сохранить' : '?? Редактировать';
+  if (button) button.textContent = editing ? 'рџ’ѕ РЎРѕС…СЂР°РЅРёС‚СЊ' : 'вњЏпёЏ Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ';
 }
 
 function collectFields(card) {
@@ -120,13 +120,13 @@ function bindCardActions() {
             }
             await postJson(`/${prefix}/save/${id}`, collectFields(card));
             setEditing(card, false);
-            ensureBadge(card, 'changed-badge', '?? Изменено', 'text-bg-warning');
+            ensureBadge(card, 'changed-badge', 'РР·РјРµРЅРµРЅРѕ', 'text-bg-warning');
             return;
           }
           if (action === 'accept') {
             await postJson(`/${prefix}/accept/${id}`);
 
-            // Для item1 — одиночный выбор, сбрасываем остальные карточки
+            // пїЅпїЅпїЅ item1 пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             if (prefix === 'item1') {
               document.querySelectorAll(`[data-card][data-action-prefix="${prefix}"]`).forEach((otherCard) => {
                 if (otherCard.dataset.id !== id && otherCard.dataset.status === 'accepted') {
@@ -179,7 +179,7 @@ function bindCustomForms() {
       const submitBtn = form.querySelector('[type="submit"]');
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Проверка...';
+        submitBtn.textContent = 'РЎРѕС…СЂР°РЅРµРЅРёРµ...';
       }
 
       const authToken = new URLSearchParams(window.location.search).get('_auth');
@@ -201,14 +201,14 @@ function bindCustomForms() {
         const result = await resp.json();
 
         if (resp.status === 422) {
-          // Вариант не прошёл проверку — показываем причину
+          // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
           if (errorDiv) {
-            errorDiv.textContent = result.reason || 'Вариант не соответствует правилам.';
+            errorDiv.textContent = result.reason || 'Р”Р°РЅРЅС‹Рµ РЅРµ РїСЂРѕС€Р»Рё РїСЂРѕРІРµСЂРєСѓ.';
             errorDiv.classList.remove('d-none');
           }
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Добавить и выбрать';
+            submitBtn.textContent = 'Р”РѕР±Р°РІРёС‚СЊ Рё РІС‹Р±СЂР°С‚СЊ';
           }
           return;
         }
@@ -220,7 +220,7 @@ function bindCustomForms() {
         showErrorToast();
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Добавить и выбрать';
+          submitBtn.textContent = 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ';
         }
       }
     });

@@ -16,15 +16,15 @@
   <div class="card-body">
 
     <div class="small text-muted mb-1">Исходный запрос</div>
-    <div class="fw-medium text-prewrap mb-3">
-      {{ user_input.input_text }}
+    <div class="fw-medium mb-3" style="white-space: pre-line;">
+  {{ user_input.input_text | trim }}
     </div>
 
 
 {% if parsed_clarification %}
-    <div class="block">
-        <h3>Уточнения</h3>
-        <p style="white-space: pre-line;">{{ parsed_clarification }}</p>
+    <div class="small text-muted mb-1">Уточнения</div>
+    <div class="fw-medium mb-3" style="white-space: pre-line;">
+        {{ parsed_clarification | trim }}
     </div>
 {% endif %}
 
