@@ -42,6 +42,14 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        # Блокируем все legacy-учётки "admin" (созданные до системы регистрации).
+        # Обнуляем password_hash → login_required не пропустит (проверка if user.password_hash).
+        # Данные (UserInput и всё связанное) остаются нетронутыми.
+        from sqlalchemy import text
+        db.session.execute(
+            text("UPDATE users SET password_hash = NULL WHERE username = 'admin' AND (email IS NULL OR email = '')")
+        )
+        db.session.commit()
 
     register_routes(app)
     register_template_helpers(app)
@@ -850,16 +858,8 @@ def register_routes(app):
             ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
             now = datetime.utcnow()
             authenticated = False
-            if user:
-                if user.password_hash:
-                    authenticated = user.check_password(password)
-                else:
-                    # Обратная совместимость: старый admin без хэша
-                    env_password = os.environ.get("APP_PASSWORD")
-                    if env_password and password == env_password and user.username == "admin":
-                        authenticated = True
-                        # Сразу хэшируем пароль для будущих входов
-                        user.set_password(password)
+            if user and user.password_hash:
+                authenticated = user.check_password(password)
             if not authenticated:
                 flash("Неверный логин / email или пароль.", "danger")
                 return render_template("login.html", f_username=login_input)
