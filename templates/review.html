@@ -6,7 +6,7 @@
   <div>
     <h1 class="h2 fw-bold">Варианты Стратегий Агента 1</h1>
     <p class="text-muted mb-0">
-      Можно выбрать только 1 пункт. Агент возвращает 3 варианта; если отклонить все, он автоматически предложит следующий набор.
+      Агент предлагает одну стратегию. При отказе укажите причину — следующее предложение учтёт ваши комментарии.
     </p>
   </div>
   <a class="btn btn-outline-secondary align-self-start" href="{{ url_for('index') }}">➕ Новый запрос</a>
@@ -14,42 +14,76 @@
 
 <div class="card border-0 bg-light mb-4 rounded-4">
   <div class="card-body">
-
     <div class="small text-muted mb-1">Исходный запрос</div>
-    <div class="fw-medium mb-3" style="white-space: pre-line;">
-  {{ user_input.input_text | trim }}
-    </div>
-
-
-{% if parsed_clarification %}
+    <div class="fw-medium mb-3" style="white-space: pre-line;">{{ user_input.input_text | trim }}</div>
+    {% if parsed_clarification %}
     <div class="small text-muted mb-1">Уточнения</div>
-    <div class="fw-medium mb-3" style="white-space: pre-line;">
-        {{ parsed_clarification | trim }}
-    </div>
-{% endif %}
-
+    <div class="fw-medium mb-3" style="white-space: pre-line;">{{ parsed_clarification | trim }}</div>
+    {% endif %}
   </div>
 </div>
 
-{% if not rounds %}
+{% if not current_strategy %}
   <div class="alert alert-danger d-flex justify-content-between align-items-center gap-3">
     <span>Ошибка обработки ответа AI. Попробуйте ещё раз.</span>
-    <form method="post" action="{{ url_for('more', input_id=user_input.id) }}" data-ai-form>
+    <form method="post" action="{{ url_for('more', input_id=user_input.id) }}" data-ai-form
+          data-ai-title="🔄 Пробуем снова"
+          data-ai-subtitle="Генерируем стратегию заново…">
       <button class="btn btn-danger" type="submit">Повторить</button>
     </form>
   </div>
+{% else %}
+  <section class="mb-4">
+    <h2 class="h5 mb-3">
+      Предложение {{ current_strategy.round_number }}
+      {% if rejected_strategies %}
+        <span class="text-muted fw-normal small">— с учётом {{ rejected_strategies | length }} причин(ы) отказа</span>
+      {% endif %}
+    </h2>
+    {{ render_cards([current_strategy], 'item1') }}
+  </section>
 {% endif %}
 
-{% for round_number, items in rounds.items() %}
-  <section class="mb-4">
-    <h2 class="h5 mb-3">Раунд {{ round_number }}</h2>
-    {{ render_cards(items, 'item1') }}
-  </section>
-{% endfor %}
+{% if rejected_strategies %}
+<div class="accordion mb-4" id="historyAccordion">
+  <div class="accordion-item border rounded-4 overflow-hidden">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button"
+              data-bs-toggle="collapse" data-bs-target="#historyCollapse"
+              aria-expanded="false" aria-controls="historyCollapse">
+        📋 История отклонённых стратегий ({{ rejected_strategies | length }})
+      </button>
+    </h2>
+    <div id="historyCollapse" class="accordion-collapse collapse">
+      <div class="accordion-body pt-3 pb-2">
+        {% for item in rejected_strategies %}
+        <div class="card border-danger mb-3">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+            <span class="fw-semibold">{{ loop.index }}. {{ item.title }}</span>
+            <span class="badge text-bg-danger ms-2 flex-shrink-0">Отклонено</span>
+          </div>
+          <div class="card-body py-2">
+            <p class="text-muted small mb-2">{{ item.description }}</p>
+            {% if item.rejection_reason %}
+            <div class="alert alert-warning mb-0 py-2 px-3 d-flex gap-2">
+              <span class="small fw-semibold flex-shrink-0">Причина отказа:</span>
+              <span class="small">{{ item.rejection_reason }}</span>
+            </div>
+            {% else %}
+            <div class="text-muted small fst-italic">Причина не указана</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <div class="sticky-actions border rounded-4 bg-white shadow-lg p-3 mt-5">
   <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
-    <div class="text-muted small">Выберите один из пунктов либо добавьте собственный пункт.</div>
+    <div class="text-muted small">Выберите стратегию либо добавьте собственный пункт.</div>
     <div class="d-flex flex-column flex-sm-row gap-2">
       <button
         class="btn btn-outline-primary btn-lg"
@@ -74,47 +108,72 @@
   </div>
 </div>
 
-<div
-  class="modal fade"
-  id="agent2LoadingModal"
-  tabindex="-1"
-  aria-hidden="true"
-  data-bs-backdrop="static"
-  data-bs-keyboard="false"
->
+<!-- AI Loading Overlay (при генерации новой стратегии) -->
+<div class="modal fade" id="agent2LoadingModal" tabindex="-1" aria-hidden="true"
+     data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content rounded-4 border-0 shadow">
       <div class="modal-body text-center py-5 px-4">
         <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
           <span class="visually-hidden">Загрузка...</span>
         </div>
-        <h5 class="mb-2">Идет AI генерация плана действий</h5>
-        <div class="text-muted small">Пожалуйста, подождите...</div>
+        <h5 class="mb-2">⚙️ Составляем план действий</h5>
+        <div class="text-muted small">Агент разбивает стратегию на конкретные шаги…</div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Модал: причина отказа -->
+<div class="modal fade" id="rejectReasonModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Причина отказа от стратегии</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="text-muted small mb-3">
+          Укажите, почему эта стратегия вам не подходит. Агент учтёт ваши комментарии и предложит другой подход.
+        </p>
+        <textarea
+          class="form-control"
+          id="rejectReasonText"
+          rows="4"
+          placeholder="Например: стратегия требует слишком высоких вложений; не учитывает сезонность бизнеса; не подходит для нашего сегмента клиентов…"
+        ></textarea>
+        <div id="rejectReasonError" class="text-danger small mt-1 d-none">
+          Пожалуйста, укажите причину отказа.
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-danger" id="confirmRejectBtn">
+          Отклонить и получить новую →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: добавить свой пункт -->
 <div class="modal fade" id="customItemModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content rounded-4">
-      <form method="post" action="{{ url_for('item1_custom', input_id=user_input.id) }}">
+      <form method="post" action="{{ url_for('item1_custom', input_id=user_input.id) }}" data-custom-form>
         <div class="modal-header">
           <h5 class="modal-title">Добавить свой пункт</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Название</label>
             <input class="form-control" name="title" required>
           </div>
-
           <div class="mb-3">
             <label class="form-label">Описание Стратегии</label>
             <textarea class="form-control" name="description" rows="3" required></textarea>
           </div>
-
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Логика</label>
@@ -125,8 +184,8 @@
               <textarea class="form-control" name="criteria" rows="4" required></textarea>
             </div>
           </div>
+          <div class="validation-error alert alert-danger mt-3 d-none"></div>
         </div>
-
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
           <button type="submit" class="btn btn-primary">Добавить и выбрать</button>
@@ -138,24 +197,18 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    // Спиннер при переходе к агенту 2
     const continueForm = document.getElementById("continueAgentForm");
     const continueButton = document.getElementById("continueButton");
     const modalElement = document.getElementById("agent2LoadingModal");
-
-    if (!continueForm || !continueButton || !modalElement || typeof bootstrap === "undefined") {
-      return;
+    if (continueForm && continueButton && modalElement && typeof bootstrap !== "undefined") {
+      const loadingModal = new bootstrap.Modal(modalElement, { backdrop: "static", keyboard: false });
+      continueForm.addEventListener("submit", function () {
+        continueButton.disabled = true;
+        continueButton.innerHTML = "Генерация...";
+        loadingModal.show();
+      });
     }
-
-    const loadingModal = new bootstrap.Modal(modalElement, {
-      backdrop: "static",
-      keyboard: false
-    });
-
-    continueForm.addEventListener("submit", function () {
-      continueButton.disabled = true;
-      continueButton.innerHTML = "Генерация...";
-      loadingModal.show();
-    });
   });
 </script>
 {% endblock %}

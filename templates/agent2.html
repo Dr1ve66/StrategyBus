@@ -36,7 +36,9 @@
     <div class="d-flex flex-column flex-sm-row gap-2">
       
       <!-- Кнопка генерации новых шагов -->
-      <form method="post" action="{{ url_for('more_agent2', selected_id=selected.id) }}">
+      <form method="post" action="{{ url_for('more_agent2', selected_id=selected.id) }}" data-ai-form
+            data-ai-title="⚙️ Генерируем новые шаги"
+            data-ai-subtitle="Агент придумывает следующие действия по стратегии…">
         <button class="btn btn-outline-primary btn-lg" type="submit">Генерация нового Шага</button>
       </form>
 
@@ -44,6 +46,36 @@
       <form method="post" action="{{ url_for('agent2_finish', selected_id=selected.id) }}">
         <button id="continueButton" class="btn {{ 'btn-success' if accepted else 'btn-secondary' }} btn-lg" type="submit" {% if not accepted %}disabled{% endif %}>Завершить →</button>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: причина отказа от шага -->
+<div class="modal fade" id="rejectStepReasonModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Причина отказа от шага</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="text-muted small mb-3">
+          Укажите, почему этот шаг вам не подходит. Агент учтёт ваши комментарии при генерации новых шагов.
+        </p>
+        <textarea
+          class="form-control"
+          id="rejectStepReasonText"
+          rows="3"
+          placeholder="Например: шаг уже выполнен, слишком дорогостоящий, не подходит по срокам…"
+        ></textarea>
+        <div id="rejectStepReasonError" class="text-danger small mt-1 d-none">
+          Пожалуйста, укажите причину отказа.
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-danger" id="confirmRejectStepBtn">Отклонить шаг →</button>
+      </div>
     </div>
   </div>
 </div>

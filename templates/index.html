@@ -24,7 +24,9 @@
 
     <div class="card shadow-sm border-0 rounded-4">
       <div class="card-body p-4">
-        <form method="post" action="{{ url_for('process') }}" data-ai-form>
+        <form method="post" action="{{ url_for('process') }}" data-ai-form
+              data-ai-title="✨ Анализируем ситуацию клиента"
+              data-ai-subtitle="Агент изучает данные и формулирует уточнения…">
 
           <div class="mb-3">
             <label class="form-label fw-semibold" for="company_size">

@@ -12,7 +12,11 @@
          data-card data-id="{{ item.id }}" data-action-prefix="{{ action_prefix }}" data-status="{{ item.status }}">
       <div class="card-header bg-white d-flex flex-column flex-lg-row gap-2 align-items-lg-center justify-content-between">
         <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
-          <span class="badge text-bg-secondary">Раунд {{ item.round_number if action_prefix == 'item1' else 1 }} · Вариант {{ item.item_number }}</span>
+          {% if action_prefix == 'item1' %}
+          <span class="badge text-bg-secondary">Предложение {{ item.round_number }}</span>
+          {% else %}
+          <span class="badge text-bg-secondary">Вариант {{ item.item_number }}</span>
+          {% endif %}
           <input class="form-control form-control-sm border-0 fw-semibold fs-5 editable field-title title-input" name="title" value="{{ shown_title }}" readonly>
         </div>
         <div class="badge-zone d-flex gap-2">

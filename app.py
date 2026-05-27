@@ -4,7 +4,6 @@ import re
 import os
 import uuid
 from io import BytesIO
-from collections import defaultdict
 from datetime import datetime
 from functools import wraps
 from types import SimpleNamespace
@@ -79,6 +78,7 @@ class Agent1Response(db.Model):
     criteria = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), nullable=False, default="pending")
     implemented = db.Column(db.Boolean, default=False)
+    rejection_reason = db.Column(db.Text, nullable=True)
     user_input = db.relationship("UserInput", backref="agent1_responses")
 
 class Agent1Edit(db.Model):
@@ -123,6 +123,7 @@ class Agent2Response(db.Model):
     status = db.Column(db.String(20), nullable=False, default="pending")
     was_edited = db.Column(db.Boolean, nullable=False, default=False)
     implemented = db.Column(db.Boolean, default=False)
+    rejection_reason = db.Column(db.Text, nullable=True)
     selected = db.relationship("Agent1Selected", backref="agent2_responses")
 
 class Agent2Final(db.Model):
@@ -136,6 +137,7 @@ class Agent2Final(db.Model):
     final_logic = db.Column(db.Text, nullable=False)
     final_criteria = db.Column(db.Text, nullable=False)
     was_edited = db.Column(db.Boolean, nullable=False, default=False)
+    pdf_locked = db.Column(db.Boolean, nullable=False, default=False)
     selected = db.relationship("Agent1Selected", backref=db.backref("agent2_final", uselist=False))
     response = db.relationship("Agent2Response")
 
@@ -156,7 +158,7 @@ class Clarification(db.Model):
 
 # === PROMPTS ===
 PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летним опытом работы с корпоративными клиентами.
-Твоя задача: сформировать 3 стратегии для клиента на основе входных данных.
+Твоя задача: сформировать 1 стратегию для клиента на основе входных данных.
 Определение стратегии
 Стратегия — это самостоятельное направление решения ситуации, содержащее:
 конкретную цель;
@@ -193,15 +195,13 @@ PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летни
 макроэкономическую ситуацию в России;
 конкретную проблему из описания.
 Не придумывай факты, которых нет во входных данных.Механизм должен быть реализуем без предположений о скрытых ресурсах.
-Требования к стратегиям
-Нужно предложить 3 принципиально разные стратегии.
-Каждая стратегия должна относиться к разному типу механики:
+Требования к стратегии
+Нужно предложить 1 стратегию.
+Стратегия должна относиться к одному из типов механики:
 Снижение потерь / защита
 Восстановление операционной деятельности
 Изменение или расширение модели дохода
-Запрещено:
-делать две стратегии с одинаковой логикой;
-использовать один и тот же инструмент одинаковым способом в нескольких стратегиях;
+Выбери тот тип, который наиболее релевантен ситуации клиента.
 Запрещено использовать факты, которых нет во входных данных;
 Нельзя предполагать наличие: действующих договоров (страхование, кредит, лизинг и т.д.);уже полученных или ожидаемых выплат;ресурсов, которые не указаны явно.
 Недопустимые примеры (запрещено):
@@ -251,18 +251,16 @@ PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летни
 срок деятельности < 12 месяцев
 Финальная самопроверка (обязательная)
 Перед тем как выдать ответ, проверь:
-названия не содержат продукт;
+название не содержит продукт;
 нет абстрактных формулировок;
-стратегии не дублируют друг друга;
-механики различаются;
 продукт (если задан) используется корректно;
-каждая стратегия реализуема и имеет измеримый эффект.
+стратегия реализуема и имеет измеримый эффект.
 Если есть нарушения — исправь до вывода.
 """
 PROMPT_A = os.environ.get("PROMPT_A", PROMPT_A_DESC)
 
 PROMPT_B_DESC = """Ты — бизнес консультант с 20-летним опытом работы с корпоративными клиентами.
-К выбранной стратегии подбери от 4 до 10 шагов.
+К выбранной стратегии подбери ровно 5 шагов.
 Шаги должны быть выстроены в логическом и временном порядке.
 Шаг — это простое действие, которое можно выполнить на практике и которое не требует дальнейшего разбиения для исполнителя.
 Название Шага должно начинаться с глагола.
@@ -533,10 +531,24 @@ def validate_custom_item(fields, prompt_type):
 
 def create_more_agent1_responses(input_id):
     user_input = UserInput.query.get_or_404(input_id)
-    previous = Agent1Response.query.filter_by(input_id=input_id).all()
+    clarification = Clarification.query.filter_by(input_id=input_id).first()
+    final_input = build_final_input(user_input, clarification)
+    previous = Agent1Response.query.filter_by(input_id=input_id).order_by(Agent1Response.round_number.asc()).all()
     next_round = max([item.round_number for item in previous], default=0) + 1
-    previous_titles = ", ".join([item.title for item in previous]) or "нет"
-    message = f"Исходный запрос пользователя: {user_input.input_text}\nПользователь уже видел следующие варианты (они его не устроили):\n{previous_titles}\nПредложи только один вариант, который отличается от предыдущих. Формат ответа такой же JSON, но с одним вариантом."
+    rejected_items = [item for item in previous if item.status == "rejected"]
+    rejection_parts = []
+    for i, item in enumerate(rejected_items, 1):
+        part = f"Стратегия {i}: «{item.title}»\nОписание: {item.description}"
+        if item.rejection_reason:
+            part += f"\nПричина отказа пользователя: {item.rejection_reason}"
+        rejection_parts.append(part)
+    rejection_history = "\n\n".join(rejection_parts)
+    message = (
+        f"Запрос пользователя:\n{final_input}\n\n"
+        f"Пользователь уже рассмотрел и отклонил следующие стратегии:\n{rejection_history}\n\n"
+        f"Важно: обязательно учти причины отказа и предложи стратегию принципиально другого типа механики.\n"
+        f"Сформируй ровно ОДНУ новую стратегию в формате JSON с одним вариантом."
+    )
     items = call_openai(PROMPT_A, message)
     final_items = call_openai_check_str(items)
     for item in final_items:
@@ -544,38 +556,53 @@ def create_more_agent1_responses(input_id):
 
 def create_more_agent2_responses(selected_id):
     selected = Agent1Selected.query.get_or_404(selected_id)
-    previous_responses = Agent2Response.query.filter_by(selected_id=selected_id).all()
-    
-    accepted_items = [r for r in previous_responses if r.status == 'accepted']
-    other_items = [r for r in previous_responses if r.status != 'accepted']
-    
+    previous_responses = Agent2Response.query.filter_by(selected_id=selected_id).order_by(Agent2Response.item_number.asc()).all()
+
+    accepted_items  = [r for r in previous_responses if r.status == 'accepted']
+    rejected_items  = [r for r in previous_responses if r.status == 'rejected']
+    pending_items   = [r for r in previous_responses if r.status == 'pending']
+
     context_parts = []
-    
+
     if accepted_items:
-        accepted_context = "\n".join([f"- {r.title}: {r.description}" for r in accepted_items])
-        context_parts.append(f"Пользователь УЖЕ ВЫБРАЛ следующие шаги (новые шаги должны логически продолжать их, не повторять):\n{accepted_context}")
-    
-    if other_items:
-        other_titles = ", ".join([f"'{r.title}'" for r in other_items])
-        context_parts.append(f"Пользователь УЖЕ ВИДЕЛ (и отклонил или еще не выбрал) следующие шаги (не предлагай их снова):\n{other_titles}")
-    
-    if not context_parts:
-         context_parts.append("Это первая генерация шагов.")
+        lines = "\n".join([f"- «{r.title}»: {r.description}" for r in accepted_items])
+        context_parts.append(
+            f"Пользователь ВЫБРАЛ эти шаги (новый шаг должен логически продолжать их, не повторять):\n{lines}"
+        )
+
+    if rejected_items:
+        lines = []
+        for r in rejected_items:
+            line = f"- «{r.title}»: {r.description}"
+            if r.rejection_reason:
+                line += f"\n  Причина отказа: {r.rejection_reason}"
+            lines.append(line)
+        context_parts.append(
+            f"Пользователь ОТКЛОНИЛ эти шаги (не предлагай похожие, обязательно учти причины отказа):\n" + "\n".join(lines)
+        )
+
+    if pending_items:
+        titles = ", ".join([f"«{r.title}»" for r in pending_items])
+        context_parts.append(f"Уже предложены, но ещё не оценены (не повторяй): {titles}")
+
+    context = "\n\n".join(context_parts) if context_parts else "Это первая дополнительная генерация."
 
     message = (
-        f"Название стратегии: {selected.final_title}\n"
+        f"Стратегия: {selected.final_title}\n"
         f"Описание: {selected.final_description}\n"
         f"Логика: {selected.final_logic}\n"
         f"Критерии: {selected.final_criteria}\n\n"
-        f"{' '.join(context_parts)}\n\n"
-        f"Задача: Сгенерируй новые шаги (от 1 до 5), которые являются логическим продолжением выбранных шагов (если они есть), "
-        f"полностью соответствуют правилам генерации и не повторяют синтаксически и логически уже предложенные варианты.\n"
-        f"Формат ответа JSON."
+        f"{context}\n\n"
+        f"Задача: сгенерируй ровно ОДИН новый шаг, который:\n"
+        f"- логически продолжает уже выбранные шаги;\n"
+        f"- не повторяет ни один из ранее предложенных (ни по смыслу, ни по названию);\n"
+        f"- учитывает причины отказа от отклонённых шагов.\n"
+        f"Верни ответ в формате JSON с одним шагом."
     )
 
     items = call_openai(PROMPT_B, message)
     final_items = call_openai_check_stp(items)
-    start_number = max([item.item_number for item in previous_responses], default=0)
+    start_number = max([r.item_number for r in previous_responses], default=0)
     for index, item in enumerate(final_items, start=1):
         item["item_number"] = start_number + index
         db.session.add(Agent2Response(selected_id=selected_id, status="pending", **item))
@@ -843,8 +870,9 @@ def register_routes(app):
         user_input = UserInput.query.get_or_404(input_id)
         clarification = Clarification.query.filter_by(input_id=input_id).first()
         final_input = build_final_input(user_input, clarification)
+        message = f"{final_input}\n\nВАЖНО: сформируй ровно ОДНУ наилучшую стратегию для данной ситуации. Формат ответа JSON с одним вариантом."
         try:
-            items = call_openai(PROMPT_A, final_input)
+            items = call_openai(PROMPT_A, message)
             final_items = call_openai_check_str(items)
             for item in final_items:
                 db.session.add(Agent1Response(input_id=input_id, round_number=1, status="pending", **item))
@@ -857,9 +885,11 @@ def register_routes(app):
     @login_required
     def review(input_id):
         user_input = UserInput.query.get_or_404(input_id)
-        responses = Agent1Response.query.filter_by(input_id=input_id).order_by(Agent1Response.round_number.desc(), Agent1Response.item_number.asc()).all()
-        rounds = defaultdict(list)
-        for item in responses: rounds[item.round_number].append(item)
+        responses = Agent1Response.query.filter_by(input_id=input_id).order_by(Agent1Response.round_number.asc(), Agent1Response.item_number.asc()).all()
+        # Latest non-rejected strategy is the current one
+        current_strategy = next((r for r in reversed(responses) if r.status != "rejected"), None)
+        # All rejected strategies, oldest first
+        rejected_strategies = [r for r in responses if r.status == "rejected"]
         accepted = any(item.status == "accepted" for item in responses)
         clarification = Clarification.query.filter_by(input_id=input_id).first()
         parsed_clarification = None
@@ -870,7 +900,11 @@ def register_routes(app):
                 text_lines = [f"{q.get('question')}: {answers.get(q.get('key')) or 'не указано'}" for q in questions]
                 parsed_clarification = "\n".join(text_lines)
             except Exception: pass
-        return render_template("review.html", user_input=user_input, rounds=rounds, accepted=accepted, clarification=clarification, parsed_clarification=parsed_clarification)
+        return render_template("review.html", user_input=user_input,
+                               current_strategy=current_strategy,
+                               rejected_strategies=rejected_strategies,
+                               accepted=accepted, clarification=clarification,
+                               parsed_clarification=parsed_clarification)
 
     @app.route("/more/<int:input_id>", methods=["POST"])
     @login_required
@@ -891,14 +925,19 @@ def register_routes(app):
     @login_required
     def item1_reject(response_id):
         response = Agent1Response.query.get_or_404(response_id)
-        input_id = response.input_id; current_round = response.round_number
-        response.status = "rejected"; db.session.commit()
-        remaining_active = Agent1Response.query.filter(Agent1Response.input_id == input_id, Agent1Response.round_number == current_round, Agent1Response.status.in_(["pending", "accepted"])).count()
-        if remaining_active == 0:
-            try: create_more_agent1_responses(input_id); db.session.commit()
-            except Exception as e: db.session.rollback(); print("AI ERROR", repr(e), flush=True); flash_ai_error(); return jsonify(ok=False, reload=False), 500
-            return jsonify(ok=True, reload=True)
-        return jsonify(ok=True, reload=False)
+        input_id = response.input_id
+        data = request.get_json(silent=True) or {}
+        rejection_reason = (data.get("reason") or "").strip() or None
+        response.status = "rejected"
+        response.rejection_reason = rejection_reason
+        db.session.commit()
+        try:
+            create_more_agent1_responses(input_id)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback(); print("AI ERROR", repr(e), flush=True); flash_ai_error()
+            return jsonify(ok=False, reload=False), 500
+        return jsonify(ok=True, reload=True)
 
     @app.route("/item1/save/<int:response_id>", methods=["POST"])
     @login_required
@@ -956,7 +995,13 @@ def register_routes(app):
         selected = Agent1Selected.query.get_or_404(selected_id)
         responses = Agent2Response.query.filter_by(selected_id=selected_id).order_by(Agent2Response.item_number.asc()).all()
         if not responses:
-            message = f"Название: {selected.final_title}\nОписание: {selected.final_description}\nЛогика: {selected.final_logic}\nКритерии: {selected.final_criteria}"
+            message = (
+                f"Стратегия: {selected.final_title}\n"
+                f"Описание: {selected.final_description}\n"
+                f"Логика: {selected.final_logic}\n"
+                f"Критерии: {selected.final_criteria}\n\n"
+                f"ВАЖНО: сгенерируй ровно 5 шагов. Формат ответа JSON."
+            )
             try:
                 items = call_openai(PROMPT_B, message)
                 final_items = call_openai_check_stp(items)
@@ -990,13 +1035,11 @@ def register_routes(app):
     @login_required
     def item2_reject(response_id):
         response = Agent2Response.query.get_or_404(response_id)
-        selected_id = response.selected_id
-        response.status = "rejected"; db.session.commit()
-        remaining = Agent2Response.query.filter(Agent2Response.selected_id == selected_id, Agent2Response.status.in_(["pending", "accepted"])).count()
-        if remaining == 0:
-            try: create_more_agent2_responses(selected_id); db.session.commit()
-            except Exception as e: db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
-            return jsonify({"ok": True, "reload": True})
+        data = request.get_json(silent=True) or {}
+        rejection_reason = (data.get("reason") or "").strip() or None
+        response.status = "rejected"
+        response.rejection_reason = rejection_reason
+        db.session.commit()
         return jsonify({"ok": True, "reload": False})
 
     @app.route("/item2/save/<int:response_id>", methods=["POST"])
@@ -1035,9 +1078,9 @@ def register_routes(app):
         first_response = responses[0]
         final = Agent2Final.query.filter_by(selected_id=selected_id).first()
         if final:
-            final.agent2_response_id = first_response.id; final.saved_at = datetime.utcnow(); final.final_title = payload["title"]; final.final_description = payload["description"]; final.final_logic = payload["logic"]; final.final_criteria = payload["criteria"]; final.was_edited = payload["was_edited"]
+            final.agent2_response_id = first_response.id; final.saved_at = datetime.utcnow(); final.final_title = payload["title"]; final.final_description = payload["description"]; final.final_logic = payload["logic"]; final.final_criteria = payload["criteria"]; final.was_edited = payload["was_edited"]; final.pdf_locked = False
         else:
-            final = Agent2Final(selected_id=selected_id, agent2_response_id=first_response.id, final_title=payload["title"], final_description=payload["description"], final_logic=payload["logic"], final_criteria=payload["criteria"], was_edited=payload["was_edited"])
+            final = Agent2Final(selected_id=selected_id, agent2_response_id=first_response.id, final_title=payload["title"], final_description=payload["description"], final_logic=payload["logic"], final_criteria=payload["criteria"], was_edited=payload["was_edited"], pdf_locked=False)
             db.session.add(final)
         db.session.commit()
         return redirect(auth_url("result", selected_id=selected_id))
@@ -1058,6 +1101,10 @@ def register_routes(app):
         final = Agent2Final.query.filter_by(selected_id=selected_id).first_or_404()
         steps = Agent2Response.query.filter_by(selected_id=selected_id, status="accepted").order_by(Agent2Response.item_number.asc()).all()
         clarification = Clarification.query.filter_by(input_id=selected.input_id).first()
+        # Фиксируем результат — после этого навигация назад недоступна
+        if not final.pdf_locked:
+            final.pdf_locked = True
+            db.session.commit()
         buffer = build_results_pdf(selected, final, clarification, steps)
         return Response(buffer.getvalue(), mimetype="application/pdf", headers={"Content-Disposition": f"attachment; filename=result_{selected_id}.pdf"})
 

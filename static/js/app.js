@@ -3,9 +3,18 @@ function showErrorToast() {
   if (node) bootstrap.Toast.getOrCreateInstance(node).show();
 }
 
-function showAiOverlay() {
+function showAiOverlay(title, subtitle) {
   const overlay = document.getElementById('aiOverlay');
-  if (overlay) overlay.classList.remove('d-none');
+  if (!overlay) return;
+  if (title) {
+    const titleEl = overlay.querySelector('.overlay-title');
+    if (titleEl) titleEl.textContent = title;
+  }
+  if (subtitle) {
+    const subtitleEl = overlay.querySelector('.overlay-subtitle');
+    if (subtitleEl) subtitleEl.textContent = subtitle;
+  }
+  overlay.classList.remove('d-none');
 }
 
 async function postJson(url, body) {
@@ -141,12 +150,92 @@ function bindCardActions() {
             return;
           }
           if (action === 'reject') {
-            const shouldShowOverlay = isLastRejectableCard(card);
-            if (shouldShowOverlay) showAiOverlay();
-            const data = await postJson(`/${prefix}/reject/${id}`);
-            applyRejectedState(card);
-            if (data.reload) {
-              window.location.reload();
+            if (prefix === 'item1') {
+              // Показываем модал с причиной отказа
+              const modal = document.getElementById('rejectReasonModal');
+              if (!modal) {
+                // Фолбэк если модала нет
+                showAiOverlay('💡 Агент переосмысливает подход', 'Ищем принципиально другое решение…');
+                await postJson(`/${prefix}/reject/${id}`, {});
+                window.location.reload();
+                return;
+              }
+              const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+              const reasonText = document.getElementById('rejectReasonText');
+              const reasonError = document.getElementById('rejectReasonError');
+
+              // Сбрасываем поле и ошибку
+              if (reasonText) reasonText.value = '';
+              if (reasonError) reasonError.classList.add('d-none');
+
+              // Заменяем кнопку подтверждения, чтобы убрать старые обработчики
+              const confirmBtn = document.getElementById('confirmRejectBtn');
+              const newConfirmBtn = confirmBtn.cloneNode(true);
+              confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+              newConfirmBtn.addEventListener('click', async () => {
+                const reason = reasonText ? reasonText.value.trim() : '';
+                if (!reason) {
+                  if (reasonError) reasonError.classList.remove('d-none');
+                  return;
+                }
+                if (reasonError) reasonError.classList.add('d-none');
+                bsModal.hide();
+                showAiOverlay('💡 Агент переосмысливает подход', 'Учитываем вашу причину и ищем другое решение…');
+                try {
+                  await postJson(`/${prefix}/reject/${id}`, { reason });
+                  window.location.reload();
+                } catch (error) {
+                  showErrorToast();
+                }
+              });
+
+              bsModal.show();
+              // Фокус на textarea после открытия
+              modal.addEventListener('shown.bs.modal', () => {
+                if (reasonText) reasonText.focus();
+              }, { once: true });
+            } else {
+              // item2: показываем модал с причиной, после — только обновляем карточку (без перезагрузки)
+              const modal = document.getElementById('rejectStepReasonModal');
+              if (!modal) {
+                await postJson(`/${prefix}/reject/${id}`, {});
+                applyRejectedState(card);
+                return;
+              }
+              const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+              const reasonText = document.getElementById('rejectStepReasonText');
+              const reasonError = document.getElementById('rejectStepReasonError');
+
+              if (reasonText) reasonText.value = '';
+              if (reasonError) reasonError.classList.add('d-none');
+
+              // Заменяем кнопку, чтобы убрать старые обработчики
+              const confirmBtn = document.getElementById('confirmRejectStepBtn');
+              const newConfirmBtn = confirmBtn.cloneNode(true);
+              confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+              newConfirmBtn.addEventListener('click', async () => {
+                const reason = reasonText ? reasonText.value.trim() : '';
+                if (!reason) {
+                  if (reasonError) reasonError.classList.remove('d-none');
+                  return;
+                }
+                if (reasonError) reasonError.classList.add('d-none');
+                bsModal.hide();
+                try {
+                  await postJson(`/${prefix}/reject/${id}`, { reason });
+                  applyRejectedState(card);
+                } catch (err) {
+                  showErrorToast();
+                }
+              });
+
+              modal.addEventListener('shown.bs.modal', () => {
+                if (reasonText) reasonText.focus();
+              }, { once: true });
+
+              bsModal.show();
             }
           }
         } catch (error) {
@@ -160,7 +249,7 @@ function bindCardActions() {
 function bindAiForms() {
   document.querySelectorAll('[data-ai-form]').forEach((form) => {
     form.addEventListener('submit', () => {
-      showAiOverlay();
+      showAiOverlay(form.dataset.aiTitle, form.dataset.aiSubtitle);
       const spinner = form.querySelector('.spinner-border');
       if (spinner) spinner.classList.remove('d-none');
       form.querySelectorAll('button').forEach((button) => button.disabled = true);
