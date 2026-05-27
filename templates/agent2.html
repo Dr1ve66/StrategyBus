@@ -34,6 +34,12 @@
   <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
     <div class="text-muted small">Выберите один или несколько итоговых пунктов либо добавьте собственный.</div>
     <div class="d-flex flex-column flex-sm-row gap-2">
+      
+      <!-- Кнопка генерации новых шагов -->
+      <form method="post" action="{{ url_for('more_agent2', selected_id=selected.id) }}">
+        <button class="btn btn-outline-primary btn-lg" type="submit">Генерация нового Шага</button>
+      </form>
+
       <button class="btn btn-outline-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#customItemModal">➕ Добавить свой пункт</button>
       <form method="post" action="{{ url_for('agent2_finish', selected_id=selected.id) }}">
         <button id="continueButton" class="btn {{ 'btn-success' if accepted else 'btn-secondary' }} btn-lg" type="submit" {% if not accepted %}disabled{% endif %}>Завершить →</button>
