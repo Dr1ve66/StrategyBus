@@ -1,22 +1,44 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="row justify-content-center align-items-center min-vh-75">
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
   <div class="col-md-6 col-lg-4">
     <div class="card shadow-lg border-0 rounded-4">
       <div class="card-body p-4 p-lg-5">
-        <h1 class="h3 mb-2 text-center">Вход</h1>
-        <p class="text-muted text-center mb-4">Логин всегда: <strong>admin</strong></p>
-        <form method="post">
+        <h1 class="h3 mb-1 text-center fw-bold">Вход</h1>
+        <p class="text-muted text-center mb-4">Войдите в свой аккаунт</p>
+
+        <form method="post" novalidate>
           <div class="mb-3">
-            <label class="form-label">Логин</label>
-            <input class="form-control form-control-lg" name="username" value="admin" required>
+            <label class="form-label fw-semibold">Логин или Email</label>
+            <input
+              class="form-control form-control-lg"
+              name="username"
+              value="{{ f_username or '' }}"
+              required
+              autofocus
+              placeholder="Логин или email"
+              autocomplete="username"
+            >
           </div>
+
           <div class="mb-4">
-            <label class="form-label">Пароль</label>
-            <input class="form-control form-control-lg" type="password" name="password" required autofocus>
+            <label class="form-label fw-semibold">Пароль</label>
+            <input
+              class="form-control form-control-lg"
+              type="password"
+              name="password"
+              required
+              autocomplete="current-password"
+            >
           </div>
-          <button class="btn btn-primary btn-lg w-100" type="submit">Войти</button>
+
+          <button class="btn btn-primary btn-lg w-100" type="submit">Войти →</button>
         </form>
+
+        <hr class="my-4">
+        <p class="text-center text-muted mb-0">
+          Нет аккаунта? <a href="{{ url_for('register') }}" class="fw-semibold">Зарегистрироваться</a>
+        </p>
       </div>
     </div>
   </div>

@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from flask import Flask, Response, flash, g, jsonify, redirect, render_template, request, session, url_for
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import BadSignature, URLSafeSerializer
+from werkzeug.security import generate_password_hash, check_password_hash
 from openai import OpenAI
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -50,11 +51,22 @@ def create_app():
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), nullable=False, default="admin")
-    ip_address = db.Column(db.String(64), nullable=False)
+    username = db.Column(db.String(80), nullable=False, unique=True)
+    email = db.Column(db.String(255), nullable=True, unique=True)
+    password_hash = db.Column(db.String(255), nullable=True)
+    ip_address = db.Column(db.String(64), nullable=True, default="unknown")
+    registered_at = db.Column(db.DateTime, nullable=True)
     first_login_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     last_login_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     login_count = db.Column(db.Integer, nullable=False, default=1)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        if self.password_hash:
+            return check_password_hash(self.password_hash, password)
+        return False
 
 class UserInput(db.Model):
     __tablename__ = "user_inputs"
@@ -368,6 +380,12 @@ def auth_url(endpoint, **values):
 
 def register_template_helpers(app):
     app.jinja_env.globals["url_for"] = auth_url
+
+    @app.context_processor
+    def inject_current_user():
+        uid = session.get("user_id") or getattr(g, "token_user_id", None)
+        user = User.query.get(uid) if uid else None
+        return {"current_user": user}
 
 def normalize_items(content):
     print("RAW AI CONTENT:", repr(content))
@@ -748,25 +766,78 @@ def register_routes(app):
             g.token_user_id = user_id
             session["user_id"] = user_id
 
+    @app.route("/register", methods=["GET", "POST"])
+    def register():
+        if current_user_id():
+            return redirect(url_for("index"))
+        if request.method == "POST":
+            username  = request.form.get("username", "").strip()
+            email     = request.form.get("email", "").strip().lower()
+            password  = request.form.get("password", "")
+            password2 = request.form.get("password2", "")
+            errors = []
+            if len(username) < 3:
+                errors.append("Имя пользователя — не менее 3 символов.")
+            if not re.match(r'^[a-zA-Z0-9_а-яА-ЯёЁ]+$', username):
+                errors.append("Имя пользователя: только буквы, цифры и знак «_».")
+            if not email or "@" not in email:
+                errors.append("Введите корректный email.")
+            if len(password) < 6:
+                errors.append("Пароль — не менее 6 символов.")
+            if password != password2:
+                errors.append("Пароли не совпадают.")
+            if not errors:
+                if User.query.filter_by(username=username).first():
+                    errors.append("Это имя пользователя уже занято.")
+                if User.query.filter_by(email=email).first():
+                    errors.append("Этот email уже зарегистрирован.")
+            if errors:
+                for err in errors:
+                    flash(err, "danger")
+                return render_template("register.html", f_username=username, f_email=email)
+            ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+            now = datetime.utcnow()
+            user = User(username=username, email=email, ip_address=ip_address,
+                        registered_at=now, first_login_at=now, last_login_at=now, login_count=1)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            session["user_id"] = user.id
+            g.auth_token = get_auth_serializer().dumps(user.id)
+            flash(f"Добро пожаловать, {username}! Регистрация прошла успешно.", "success")
+            return redirect(auth_url("index"))
+        return render_template("register.html")
+
     @app.route("/login", methods=["GET", "POST"])
     def login():
+        if current_user_id():
+            return redirect(url_for("index"))
         if request.method == "POST":
-            password = os.environ.get("APP_PASSWORD")
-            if not password:
-                flash("APP_PASSWORD не задан. Добавьте пароль в переменные окружения.", "danger")
-                return render_template("login.html")
-            if request.form.get("username") != "admin" or request.form.get("password") != password:
-                flash("Неверный логин или пароль.", "danger")
-                return render_template("login.html")
+            login_input = request.form.get("username", "").strip()
+            password    = request.form.get("password", "")
+            # Ищем по username или email
+            user = User.query.filter_by(username=login_input).first()
+            if not user:
+                user = User.query.filter_by(email=login_input.lower()).first()
             ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
-            username = request.form.get("username")
-            user = User.query.filter_by(username=username).first()
             now = datetime.utcnow()
+            authenticated = False
             if user:
-                user.last_login_at = now; user.login_count += 1
-            else:
-                user = User(username="admin", ip_address=ip_address, first_login_at=now, last_login_at=now, login_count=1)
-                db.session.add(user)
+                if user.password_hash:
+                    authenticated = user.check_password(password)
+                else:
+                    # Обратная совместимость: старый admin без хэша
+                    env_password = os.environ.get("APP_PASSWORD")
+                    if env_password and password == env_password and user.username == "admin":
+                        authenticated = True
+                        # Сразу хэшируем пароль для будущих входов
+                        user.set_password(password)
+            if not authenticated:
+                flash("Неверный логин / email или пароль.", "danger")
+                return render_template("login.html", f_username=login_input)
+            user.last_login_at = now
+            user.login_count += 1
+            user.ip_address = ip_address
             db.session.commit()
             session["user_id"] = user.id
             g.auth_token = get_auth_serializer().dumps(user.id)
