@@ -266,9 +266,18 @@ function bindCustomForms() {
       if (errorDiv) errorDiv.classList.add('d-none');
 
       const submitBtn = form.querySelector('[type="submit"]');
+      const originalBtnText = submitBtn ? submitBtn.textContent : 'Добавить и выбрать';
+
+      const restoreBtn = () => {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalBtnText;
+        }
+      };
+
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Сохранение...';
+        submitBtn.textContent = 'Проверка…';
       }
 
       const authToken = new URLSearchParams(window.location.search).get('_auth');
@@ -290,15 +299,19 @@ function bindCustomForms() {
         const result = await resp.json();
 
         if (resp.status === 422) {
-          // ������� �� ������ �������� � ���������� �������
+          // Вариант не прошёл проверку — показываем причину в форме
           if (errorDiv) {
-            errorDiv.textContent = result.reason || 'Данные не прошли проверку.';
+            errorDiv.textContent = result.reason || 'Вариант не соответствует правилам.';
             errorDiv.classList.remove('d-none');
           }
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Добавить и выбрать';
-          }
+          restoreBtn();
+          return;
+        }
+
+        if (!resp.ok) {
+          // Любая другая ошибка (400 и т.д.)
+          showErrorToast();
+          restoreBtn();
           return;
         }
 
@@ -307,10 +320,7 @@ function bindCustomForms() {
         }
       } catch (err) {
         showErrorToast();
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = '�������� � �������';
-        }
+        restoreBtn();
       }
     });
   });

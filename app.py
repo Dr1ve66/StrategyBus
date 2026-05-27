@@ -9,7 +9,7 @@ from functools import wraps
 from types import SimpleNamespace
 import pandas as pd
 from dotenv import load_dotenv
-from flask import Flask, Response, flash, g, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, Response, abort, flash, g, jsonify, redirect, render_template, request, session, url_for
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import BadSignature, URLSafeSerializer
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -362,6 +362,31 @@ def login_required(view):
         return view(*args, **kwargs)
     return wrapped
 
+# Ownership-checking helpers — abort(403) if the resource belongs to another user
+def get_input_or_403(input_id):
+    user_input = UserInput.query.get_or_404(input_id)
+    if user_input.user_id != current_user_id():
+        abort(403)
+    return user_input
+
+def get_agent1_response_or_403(response_id):
+    response = Agent1Response.query.get_or_404(response_id)
+    if response.user_input.user_id != current_user_id():
+        abort(403)
+    return response
+
+def get_selected_or_403(selected_id):
+    selected = Agent1Selected.query.get_or_404(selected_id)
+    if selected.user_input.user_id != current_user_id():
+        abort(403)
+    return selected
+
+def get_agent2_response_or_403(response_id):
+    response = Agent2Response.query.get_or_404(response_id)
+    if response.selected.user_input.user_id != current_user_id():
+        abort(403)
+    return response
+
 def get_auth_serializer():
     return URLSafeSerializer(current_app_secret(), salt="iframe-auth")
 
@@ -384,7 +409,7 @@ def register_template_helpers(app):
     @app.context_processor
     def inject_current_user():
         uid = session.get("user_id") or getattr(g, "token_user_id", None)
-        user = User.query.get(uid) if uid else None
+        user = db.session.get(User, uid) if uid else None
         return {"current_user": user}
 
 def normalize_items(content):
@@ -545,7 +570,8 @@ def validate_custom_item(fields, prompt_type):
         return True, ""
     except Exception as e:
         print("VALIDATE ERROR:", repr(e), flush=True)
-        return True, ""
+        # Fail closed: if validation call fails, block the item rather than silently bypass
+        return False, "Не удалось проверить вариант, попробуйте позже."
 
 def create_more_agent1_responses(input_id):
     user_input = UserInput.query.get_or_404(input_id)
@@ -569,6 +595,8 @@ def create_more_agent1_responses(input_id):
     )
     items = call_openai(PROMPT_A, message)
     final_items = call_openai_check_str(items)
+    if not final_items:
+        raise RuntimeError("AI вернул пустой список стратегий")
     for item in final_items:
         db.session.add(Agent1Response(input_id=input_id, round_number=next_round, status="pending", **item))
 
@@ -619,7 +647,7 @@ def create_more_agent2_responses(selected_id):
     )
 
     items = call_openai(PROMPT_B, message)
-    final_items = call_openai_check_stp(items)
+    final_items = call_openai_check_stp(items)[:1]  # enforce exactly 1 new step
     start_number = max([r.item_number for r in previous_responses], default=0)
     for index, item in enumerate(final_items, start=1):
         item["item_number"] = start_number + index
@@ -762,7 +790,7 @@ def register_routes(app):
             user_id = int(get_auth_serializer().loads(g.auth_token))
         except (BadSignature, TypeError, ValueError):
             g.auth_token = None; return
-        if User.query.get(user_id):
+        if db.session.get(User, user_id):
             g.token_user_id = user_id
             session["user_id"] = user_id
 
@@ -938,7 +966,7 @@ def register_routes(app):
     @app.route("/process_after_clarify/<int:input_id>")
     @login_required
     def process_after_clarify(input_id):
-        user_input = UserInput.query.get_or_404(input_id)
+        user_input = get_input_or_403(input_id)
         clarification = Clarification.query.filter_by(input_id=input_id).first()
         final_input = build_final_input(user_input, clarification)
         message = f"{final_input}\n\nВАЖНО: сформируй ровно ОДНУ наилучшую стратегию для данной ситуации. Формат ответа JSON с одним вариантом."
@@ -955,7 +983,7 @@ def register_routes(app):
     @app.route("/review/<int:input_id>")
     @login_required
     def review(input_id):
-        user_input = UserInput.query.get_or_404(input_id)
+        user_input = get_input_or_403(input_id)
         responses = Agent1Response.query.filter_by(input_id=input_id).order_by(Agent1Response.round_number.asc(), Agent1Response.item_number.asc()).all()
         # Latest non-rejected strategy is the current one
         current_strategy = next((r for r in reversed(responses) if r.status != "rejected"), None)
@@ -980,6 +1008,7 @@ def register_routes(app):
     @app.route("/more/<int:input_id>", methods=["POST"])
     @login_required
     def more(input_id):
+        get_input_or_403(input_id)
         try: create_more_agent1_responses(input_id); db.session.commit()
         except Exception as e: db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
         return redirect(auth_url("review", input_id=input_id))
@@ -987,7 +1016,7 @@ def register_routes(app):
     @app.route("/item1/accept/<int:response_id>", methods=["POST"])
     @login_required
     def item1_accept(response_id):
-        response = Agent1Response.query.get_or_404(response_id)
+        response = get_agent1_response_or_403(response_id)
         Agent1Response.query.filter(Agent1Response.input_id == response.input_id, Agent1Response.status == "accepted", Agent1Response.id != response_id).update({"status": "pending"})
         response.status = "accepted"; db.session.commit()
         return jsonify({"ok": True})
@@ -995,15 +1024,22 @@ def register_routes(app):
     @app.route("/item1/reject/<int:response_id>", methods=["POST"])
     @login_required
     def item1_reject(response_id):
-        response = Agent1Response.query.get_or_404(response_id)
+        response = get_agent1_response_or_403(response_id)
         input_id = response.input_id
         data = request.get_json(silent=True) or {}
         rejection_reason = (data.get("reason") or "").strip() or None
-        response.status = "rejected"
-        response.rejection_reason = rejection_reason
-        db.session.commit()
+        # Check for another pending strategy before marking this one rejected
+        existing_pending = Agent1Response.query.filter(
+            Agent1Response.input_id == input_id,
+            Agent1Response.status == "pending",
+            Agent1Response.id != response_id
+        ).first()
         try:
-            create_more_agent1_responses(input_id)
+            # Mark rejected and (if needed) generate a new strategy in one transaction
+            response.status = "rejected"
+            response.rejection_reason = rejection_reason
+            if existing_pending is None:
+                create_more_agent1_responses(input_id)
             db.session.commit()
         except Exception as e:
             db.session.rollback(); print("AI ERROR", repr(e), flush=True); flash_ai_error()
@@ -1013,7 +1049,7 @@ def register_routes(app):
     @app.route("/item1/save/<int:response_id>", methods=["POST"])
     @login_required
     def item1_save(response_id):
-        response = Agent1Response.query.get_or_404(response_id)
+        response = get_agent1_response_or_403(response_id)
         try: fields = validate_payload(request.get_json(force=True) or {})
         except ValueError: return jsonify({"ok": False}), 400
         edit = response.edit
@@ -1028,7 +1064,7 @@ def register_routes(app):
     @app.route("/item1/custom/<int:input_id>", methods=["POST"])
     @login_required
     def item1_custom(input_id):
-        UserInput.query.get_or_404(input_id)
+        get_input_or_403(input_id)
         try: payload = request.get_json(silent=True) or request.form; fields = validate_payload(payload)
         except ValueError:
             if request.is_json: return jsonify({"ok": False}), 400
@@ -1045,6 +1081,7 @@ def register_routes(app):
     @app.route("/continue/<int:input_id>", methods=["POST"])
     @login_required
     def continue_agent1(input_id):
+        get_input_or_403(input_id)
         response = Agent1Response.query.filter_by(input_id=input_id, status="accepted").first()
         if not response: flash("Сначала выберите один вариант.", "warning"); return redirect(auth_url("review", input_id=input_id))
         payload = final_agent1_payload(response)
@@ -1063,7 +1100,7 @@ def register_routes(app):
     @app.route("/agent2/<int:selected_id>")
     @login_required
     def agent2(selected_id):
-        selected = Agent1Selected.query.get_or_404(selected_id)
+        selected = get_selected_or_403(selected_id)
         responses = Agent2Response.query.filter_by(selected_id=selected_id).order_by(Agent2Response.item_number.asc()).all()
         if not responses:
             message = (
@@ -1086,6 +1123,7 @@ def register_routes(app):
     @app.route("/agent2/more/<int:selected_id>", methods=["POST"])
     @login_required
     def more_agent2(selected_id):
+        get_selected_or_403(selected_id)
         try:
             create_more_agent2_responses(selected_id)
             db.session.commit()
@@ -1098,14 +1136,14 @@ def register_routes(app):
     @app.route("/item2/accept/<int:response_id>", methods=["POST"])
     @login_required
     def item2_accept(response_id):
-        response = Agent2Response.query.get_or_404(response_id)
+        response = get_agent2_response_or_403(response_id)
         response.status = "accepted"; db.session.commit()
         return jsonify({"ok": True})
 
     @app.route("/item2/reject/<int:response_id>", methods=["POST"])
     @login_required
     def item2_reject(response_id):
-        response = Agent2Response.query.get_or_404(response_id)
+        response = get_agent2_response_or_403(response_id)
         data = request.get_json(silent=True) or {}
         rejection_reason = (data.get("reason") or "").strip() or None
         response.status = "rejected"
@@ -1116,7 +1154,7 @@ def register_routes(app):
     @app.route("/item2/save/<int:response_id>", methods=["POST"])
     @login_required
     def item2_save(response_id):
-        response = Agent2Response.query.get_or_404(response_id)
+        response = get_agent2_response_or_403(response_id)
         try: fields = validate_payload(request.get_json(force=True) or {})
         except ValueError: return jsonify({"ok": False}), 400
         response.title = fields["title"]; response.description = fields["description"]; response.logic = fields["logic"]; response.criteria = fields["criteria"]; response.was_edited = True
@@ -1126,7 +1164,7 @@ def register_routes(app):
     @app.route("/item2/custom/<int:selected_id>", methods=["POST"])
     @login_required
     def item2_custom(selected_id):
-        Agent1Selected.query.get_or_404(selected_id)
+        get_selected_or_403(selected_id)
         try: payload = request.get_json(silent=True) or request.form; fields = validate_payload(payload)
         except ValueError:
             if request.is_json: return jsonify({"ok": False}), 400
@@ -1143,6 +1181,7 @@ def register_routes(app):
     @app.route("/agent2/finish/<int:selected_id>", methods=["POST"])
     @login_required
     def agent2_finish(selected_id):
+        get_selected_or_403(selected_id)
         responses = Agent2Response.query.filter_by(selected_id=selected_id, status="accepted").order_by(Agent2Response.item_number.asc()).all()
         if not responses: flash("Сначала выберите хотя бы один вариант Агента 2.", "warning"); return redirect(auth_url("agent2", selected_id=selected_id))
         payload = combine_payloads([final_agent2_payload(response) for response in responses], "Финальный выбор")
@@ -1159,7 +1198,7 @@ def register_routes(app):
     @app.route("/result/<int:selected_id>")
     @login_required
     def result(selected_id):
-        selected = Agent1Selected.query.get_or_404(selected_id)
+        selected = get_selected_or_403(selected_id)
         final = Agent2Final.query.filter_by(selected_id=selected_id).first_or_404()
         steps = Agent2Response.query.filter_by(selected_id=selected_id, status="accepted").order_by(Agent2Response.item_number.asc()).all()
         clarification = Clarification.query.filter_by(input_id=selected.input_id).first()
@@ -1168,7 +1207,7 @@ def register_routes(app):
     @app.route("/result_pdf/<int:selected_id>")
     @login_required
     def result_pdf(selected_id):
-        selected = Agent1Selected.query.get_or_404(selected_id)
+        selected = get_selected_or_403(selected_id)
         final = Agent2Final.query.filter_by(selected_id=selected_id).first_or_404()
         steps = Agent2Response.query.filter_by(selected_id=selected_id, status="accepted").order_by(Agent2Response.item_number.asc()).all()
         clarification = Clarification.query.filter_by(input_id=selected.input_id).first()
