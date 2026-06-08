@@ -1,0 +1,872 @@
+{
+  "excluded": {
+    "КУ Оформление справки о ПД": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Нестор.БРИФ": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "КУ Экспертиза контракта": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "КУ Проведение семинара по ВЭД и ВК": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Listim": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "КУ Консультация": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Визирь": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Voice2Med": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "КУ Подготовка расчетного документа": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Ладошки": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Amelia 2.0": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Прочее. Кредит. ЮЛ. Брокер": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Нестор.ПРАВОСУДИЕ": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Защита 360": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Технологическая связь М2М": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Спорт рядом": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Прочее. Залог. ЮЛ. Брокер": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "SBERUNITY": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Все остальные «Индивидуальные проекты» и «Прочее»": "Не предлагать к шагам Agent2 (решение пользователя).",
+    "Электронный документооборот (Сервисы «Документооборот» и «Отчетность»)": "Дубликат базового «Электронный документооборот»; исключить из матчинга (решение пользователя)."
+  },
+  "overrides": {
+    "Портал DA": {
+      "capabilities": [
+        "asset_realization",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_financing",
+        "employee_training",
+        "business_analytics"
+      ],
+      "step_archetypes": [
+        "asset_realization"
+      ],
+      "web_note": "Портал продажи имущества, изъятого у заёмщиков-банкротов (уточнение пользователя).",
+      "source": "manual"
+    },
+    "СберЧаевые": {
+      "capabilities": [
+        "tips_service",
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "business_financing",
+        "business_analytics",
+        "customer_loyalty_program"
+      ],
+      "step_archetypes": [
+        "staff_tips"
+      ],
+      "web_note": "Сервис для оставления чаевых официантам, парикмахерам и другим сотрудникам сферы услуг (уточнение пользователя).",
+      "source": "manual"
+    },
+    "Taxfree": {
+      "capabilities": [
+        "tax_refund_service",
+        "retail_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "business_financing",
+        "business_analytics",
+        "customer_loyalty_program"
+      ],
+      "step_archetypes": [
+        "tax_free_operations"
+      ],
+      "web_note": "Возврат НДС иностранным покупателям (tax free).",
+      "source": "manual"
+    },
+    "ДМС ЮЛ Рынок. ЮЛ. Брокер": {
+      "capabilities": [
+        "insurance",
+        "medical_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "business_financing",
+        "customer_loyalty_program",
+        "business_analytics"
+      ],
+      "step_archetypes": [
+        "corporate_health_insurance",
+        "employee_wellness"
+      ],
+      "web_note": "Корпоративное добровольное медицинское страхование для сотрудников (ДМС).",
+      "source": "manual"
+    },
+    "HR-сервисы": {
+      "capabilities": [
+        "hr_operations",
+        "employee_hiring",
+        "employee_retention",
+        "payroll"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "payment_acceptance",
+        "business_financing",
+        "customer_loyalty_program",
+        "business_analytics",
+        "tax_free_operations"
+      ],
+      "step_archetypes": [
+        "employee_hiring",
+        "employee_retention"
+      ],
+      "web_note": "Комплекс HR-услуг: кадры, подбор, удержание, зарплата.",
+      "source": "manual"
+    },
+    "Звук Бизнес": {
+      "capabilities": [
+        "background_music",
+        "retail_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "business_financing",
+        "business_analytics",
+        "customer_loyalty_program"
+      ],
+      "step_archetypes": [
+        "background_music"
+      ],
+      "web_note": "Корпоративная/фоновая музыка для бизнеса (офис, ритейл).",
+      "source": "manual"
+    },
+    "Все остальные гарантии, кредиты, опции и пакеты": {
+      "capabilities": [
+        "catch_all_banking",
+        "business_financing",
+        "bank_guarantee"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Агрегат стандартных банковских продуктов: кредиты, гарантии, опции (только финансирование/обеспечение).",
+      "source": "manual"
+    },
+    "Все остальные партнёрские сервисы и активации": {
+      "capabilities": [
+        "catch_all_partner",
+        "business_automation"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "employee_hiring",
+        "payment_acceptance",
+        "business_financing",
+        "launch_advertising",
+        "improve_ad_performance",
+        "customer_loyalty_program",
+        "corporate_health_insurance",
+        "tax_free_operations",
+        "staff_tips",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "custom_solutions"
+      ],
+      "web_note": "Агрегат партнёрских цифровых сервисов и активаций (только автоматизация/цифровизация).",
+      "source": "manual"
+    },
+    "21. Договорная гарантия/ гарантия качества. Альбом №593 для Принципала с непроектным риск-профилем ОК": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "11. Финансовый кредит. Альбом №931-р": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "1.2 Гарантия исполнения финансовых обязательств по договору/ контракту (гарантия платежа). Альбом №1593-р, Альбом №2559, Альбом №593-р": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "16. Гарантия возврата займа на оборотные цели за счет текущей деятельности. Альбом №593 для Принципала с непроектным риск-профилем": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "25. Налоговая гарантия возмещения НДС (заявительный порядок). Альбом №593-р, Альбом №1593-р ОК": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "39.3. Кредит под будущую прибыль в рамках Продукта по финансированию проектов строительства Объектов жилой недвижимости «3 в 1». Альбом №5738": {
+      "capabilities": [
+        "business_financing",
+        "developer_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "17. Гарантия возврата займа на оборотные цели за счет текущей деятельности. Альбом №593 для Принципала с проектным риск-профилем или СКМ, Альбом №2559": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "53. Финансирование текущей деятельности Контрактников и Подрядчиков (Котловое финансирование). Альбом №2559": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "24. Финансирование проектов жилищного строит-ва при осуществлении расчетов по договорам участия в долевом строит-ве с исп. счетов эскроу. Альбом №5738": {
+      "capabilities": [
+        "business_financing",
+        "developer_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "3.1 Гарантия исполнения договорных обязательств по договору/ контракту (договорная гарантия/ гарантия качества). Альбом №593-р для Принципала с непроектным риск-профилем": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "21. Договорная гарантия/ гарантия качества. Альбом №593 для Принципала с непроектным риск-профиля": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "26. Налоговая гарантия возмещения налога по ст.203 НК РФ (заявительный порядок). Альбом №593-р, Альбом №1593-р ОК": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "14. Гарантия платежа непроектного Принципала. Альбом №593-р ОК": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "1.1 Гарантия исполнения финансовых обязательств по договору/ контракту (гарантия платежа) Альбом №593-р": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "25. Налоговая гарантия возмещения НДС (заявительный порядок). Альбом №593-р, Альбом №1593": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "22. Договорная гарантия/ гарантия качества . Альбом №593 для Принципала с проектным риск-профилем, Альбом №1593, Альбом №2559 \"": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "25. Кредитование с обеспечением в виде залога квартир, нежилых помещений и машиномест в объектах жилой недвижимости, введенных в эксп-ю. Альбом №5738": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "15. Гарантия платежа. Альбом №593 для проектного Принципала или СКМ, Альбом №2559": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "3.2 Гарантия исполнения договорных обязательств по договору/ контракту (договорная гарантия/ гарантия качества). Альбом №593-р для Принципала с проектным риск-профилем": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "6. Проектное финансирование Альбом №479-р, Альбом №2559, ОРД": {
+      "capabilities": [
+        "business_financing",
+        "developer_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "2. Гарантия исполнения платежных обязательств по договору приобретения земельного участка под строительство Объекта жилой недвижимости. Альбом №5738": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "49. Индивидуальный овердрафт. Альбом №2667 ОК": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "10. Оборотный кредит. Альбом №931-р, ОРД": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "24. Финансирование проектов жилищного строит-ва при осущес-и расчетов по договорам участия в долевом строит-ве с исп счетов эскроу. Альбом №5738 ОК": {
+      "capabilities": [
+        "business_financing",
+        "developer_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "5. Инвестиционное кредитование. Альбом №479-р, Альбом №2559, ОРД": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    },
+    "10. Оборотный кредит. Альбом №931-р, ОРД ОК": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия.",
+      "source": "manual"
+    }
+  }
+}

@@ -2,23 +2,28 @@
 {% from '_cards.html' import render_cards %}
 
 {% block content %}
-<div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between gap-3">
   <div>
-    <h1 class="h2 fw-bold">Варианты Стратегий Агента 1</h1>
-    <p class="text-muted mb-0">
-      Агент предлагает одну стратегию. При отказе укажите причину — следующее предложение учтёт ваши комментарии.
+    <div class="eyebrow mb-2">Этап 1</div>
+    <h1 class="h2 page-title">Выбор стратегии</h1>
+    <p class="page-subtitle mb-0">
+      AI предлагает одну стратегию за раз. Если вариант не подходит, укажите причину — следующий будет точнее.
     </p>
   </div>
-  <a class="btn btn-outline-secondary align-self-start" href="{{ url_for('index') }}">➕ Новый запрос</a>
+  <a class="btn btn-outline-primary align-self-start" href="{{ url_for('index') }}">Новый запрос</a>
 </div>
 
-<div class="card border-0 bg-light mb-4 rounded-4">
-  <div class="card-body">
+<div class="card border-0 mb-4 rounded-4">
+  <div class="card-body p-4">
     <div class="small text-muted mb-1">Исходный запрос</div>
     <div class="fw-medium mb-3" style="white-space: pre-line;">{{ user_input.input_text | trim }}</div>
     {% if parsed_clarification %}
     <div class="small text-muted mb-1">Уточнения</div>
     <div class="fw-medium mb-3" style="white-space: pre-line;">{{ parsed_clarification | trim }}</div>
+    {% endif %}
+    {% if parsed_industry_check %}
+    <div class="small text-muted mb-1">Отраслевая специфика</div>
+    <div class="fw-medium mb-0" style="white-space: pre-line;">{{ parsed_industry_check | trim }}</div>
     {% endif %}
   </div>
 </div>
@@ -91,7 +96,7 @@
         data-bs-toggle="modal"
         data-bs-target="#customItemModal"
       >
-        ➕ Добавить свой пункт
+        Добавить свой пункт
       </button>
 
       <form id="continueAgentForm" method="post" action="{{ url_for('continue_agent1', input_id=user_input.id) }}">

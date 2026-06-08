@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import csv
 import json
+import math
 import re
 import os
 import uuid
@@ -23,7 +25,30 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle, LongTable
 
 load_dotenv()
+from situation_validation import (
+    SITUATION_REQUIRED_SLOTS,
+    SITUATION_SLOT_LABELS,
+    SITUATION_SOFT_LENGTH,
+    SITUATION_HARD_LENGTH,
+    build_situation_from_focus,
+    build_situation_from_slots,
+    call_situation_check as analyze_situation_slots,
+    load_situation_clarify_state,
+    load_situation_focus_question,
+    load_situation_slot_questions,
+    load_situation_slots_filled,
+)
+from capability_rules import is_hiring_context
+from product_metadata import (
+    clear_product_metadata_cache,
+    extract_step_archetypes,
+    extract_step_capabilities,
+    is_product_excluded,
+    score_product_by_metadata,
+)
+
 db = SQLAlchemy()
+PRODUCT_STEP_RATIO = 0.7
 
 def create_app():
     app = Flask(__name__)
@@ -42,6 +67,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        ensure_situation_check_schema()
         # Блокируем все legacy-учётки "admin" (созданные до системы регистрации).
         # Обнуляем password_hash → login_required не пропустит (проверка if user.password_hash).
         # Данные (UserInput и всё связанное) остаются нетронутыми.
@@ -176,6 +202,176 @@ class Clarification(db.Model):
     answers = db.Column(db.Text)
     status = db.Column(db.String(20), default="pending")
 
+class IndustryCheck(db.Model):
+    __tablename__ = "industry_checks"
+    id = db.Column(db.Integer, primary_key=True)
+    input_id = db.Column(db.Integer, db.ForeignKey("user_inputs.id"), nullable=False)
+    initial_industry = db.Column(db.Text, nullable=False)
+    extracted_industry_context = db.Column(db.Text, nullable=True)
+    industry_detail_required = db.Column(db.Boolean, nullable=False, default=False)
+    industry_context_sufficient = db.Column(db.Boolean, nullable=False, default=False)
+    industry_context_found_in_description = db.Column(db.Boolean, nullable=False, default=False)
+    trigger = db.Column(db.String(64), nullable=False, default="none")
+    reason = db.Column(db.Text, nullable=True)
+    question = db.Column(db.Text, nullable=True)
+    answer = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), nullable=False, default="checked")
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_input = db.relationship("UserInput", backref=db.backref("industry_checks", lazy=True))
+
+class SituationCheck(db.Model):
+    __tablename__ = "situation_checks"
+    id = db.Column(db.Integer, primary_key=True)
+    input_id = db.Column(db.Integer, db.ForeignKey("user_inputs.id"), nullable=False)
+    original_text = db.Column(db.Text, nullable=False)
+    normalized_text = db.Column(db.Text, nullable=True)
+    ok = db.Column(db.Boolean, nullable=False, default=False)
+    score = db.Column(db.Integer, nullable=False, default=0)
+    missing = db.Column(db.Text, nullable=True)
+    reason = db.Column(db.Text, nullable=True)
+    rewrite_hint = db.Column(db.Text, nullable=True)
+    example = db.Column(db.Text, nullable=True)
+    slot_questions = db.Column(db.Text, nullable=True)
+    slots_filled = db.Column(db.Text, nullable=True)
+    source = db.Column(db.String(20), nullable=False, default="llm")
+    status = db.Column(db.String(20), nullable=False, default="failed")
+    attempt_number = db.Column(db.Integer, nullable=False, default=1)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_input = db.relationship("UserInput", backref=db.backref("situation_checks", lazy=True))
+
+def product_catalog_paths():
+    return [
+        os.path.join(os.path.dirname(__file__), "data", "products.txt"),
+        "/app/data/products.txt",
+    ]
+
+_PRODUCT_CATALOG_CACHE = {"path": None, "mtime": None, "products": []}
+_PRODUCT_CAPABILITIES_CACHE = {}
+_KNOWN_STEPS_CACHE = {"mtime": None, "steps": []}
+
+def _catalog_cache_path():
+    return next((path for path in product_catalog_paths() if os.path.exists(path)), None)
+
+def load_product_catalog():
+    catalog_path = _catalog_cache_path()
+    if not catalog_path:
+        return []
+    mtime = os.path.getmtime(catalog_path)
+    cache = _PRODUCT_CATALOG_CACHE
+    if cache["path"] == catalog_path and cache["mtime"] == mtime:
+        return cache["products"]
+    products = []
+    with open(catalog_path, encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f, delimiter=";")
+        for row in reader:
+            name = (row.get("Название продукта") or "").strip()
+            description = (row.get("Что делает продукт/сервис") or "").strip()
+            problems = (row.get("Какие проблемы помогает решить") or "").strip()
+            if name and description:
+                products.append({"name": name, "description": description, "problems": problems})
+    cache["path"] = catalog_path
+    cache["mtime"] = mtime
+    cache["products"] = products
+    _PRODUCT_CAPABILITIES_CACHE.clear()
+    clear_product_metadata_cache()
+    return products
+
+def build_product_catalog_prompt(compact=False):
+    products = load_product_catalog()
+    if compact:
+        return "\n".join(item["name"] for item in products)
+    return "\n".join([f"{item['name']} - {item['description']}" for item in products])
+
+def load_signals_by_segment():
+    path = os.path.join(os.path.dirname(__file__), "data", "signals.tsv")
+    signals_by_segment = {"micro_small": [], "medium_large": []}
+    if not os.path.exists(path):
+        return signals_by_segment
+    seen = {key: set() for key in signals_by_segment}
+    with open(path, encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            segment_group = (row.get("segment_group") or "").strip()
+            signal = (row.get("signal") or "").strip()
+            signal_id = (row.get("signal_id") or "").strip()
+            if segment_group not in signals_by_segment or not signal or signal_id in seen[segment_group]:
+                continue
+            seen[segment_group].add(signal_id)
+            label = f"{signal_id} — {signal}" if signal_id else signal
+            signals_by_segment[segment_group].append({"id": signal_id, "signal": signal, "label": label})
+    return signals_by_segment
+
+def load_all_signals():
+    seen = set()
+    signals = []
+    for group_signals in load_signals_by_segment().values():
+        for item in group_signals:
+            key = item["id"] or item["signal"]
+            if key in seen:
+                continue
+            seen.add(key)
+            signals.append(item)
+    return signals
+
+def signal_allowed_for_segment(segment_group, signal):
+    if not signal:
+        return True
+    signals = load_signals_by_segment().get(segment_group, [])
+    return any(signal in {item["signal"], item["id"], item["label"]} for item in signals)
+
+def signal_exists(signal):
+    if not signal:
+        return True
+    return any(signal in {item["signal"], item["id"], item["label"]} for item in load_all_signals())
+
+def normalize_signals_list(signals=None, signal=None):
+    if signals is not None:
+        if isinstance(signals, str):
+            return [signals.strip()] if signals.strip() else []
+        return [str(item).strip() for item in signals if str(item).strip()]
+    if signal:
+        return normalize_signals_list(signals=signal)
+    return []
+
+def signals_all_exist(signals):
+    return all(signal_exists(item) for item in normalize_signals_list(signals=signals))
+
+def signals_joined(signals):
+    normalized = normalize_signals_list(signals=signals)
+    return "; ".join(normalized)
+
+def parse_signals_from_text(text):
+    signals = []
+    block_match = re.search(r"^Сигналы:\s*\n((?:- .+\n?)*)", text or "", flags=re.MULTILINE)
+    if block_match:
+        for line in block_match.group(1).splitlines():
+            line = line.strip()
+            if line.startswith("- "):
+                signals.append(line[2:].strip())
+    if not signals:
+        single_match = re.search(r"^Сигнал:\s*(.*)$", text or "", flags=re.MULTILINE)
+        if single_match and single_match.group(1).strip():
+            signals.append(single_match.group(1).strip())
+    return signals
+
+def format_signal_lines(signals):
+    normalized = normalize_signals_list(signals=signals)
+    if not normalized:
+        return []
+    if len(normalized) == 1:
+        return [f"Сигнал: {normalized[0]}"]
+    lines = ["Сигналы:"]
+    lines.extend(f"- {item}" for item in normalized)
+    return lines
+
+def segment_group_for_company_size(company_size):
+    value = (company_size or "").lower()
+    if "микро" in value or "мал" in value:
+        return "micro_small"
+    if "сред" in value or "круп" in value:
+        return "medium_large"
+    return ""
+
 # === PROMPTS ===
 PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летним опытом работы с корпоративными клиентами.
 Твоя задача: сформировать 1 стратегию для клиента на основе входных данных.
@@ -295,18 +491,17 @@ PROMPT_B_DESC = """Ты — бизнес консультант с 20-летни
 количество сотрудников, размер выручки, срок деятельности, назначения платежей в транзакциях). Не предлагай Критерии которые можно узнать только работая в самой компании (например: есть ли в штате должность юриста,
 у компании есть pipeline по продажам и подобное)
 иметь числовое значение или это значение можно получить с помощью вычислений. То есть не указывай "не подходит по ОКВЭД", пиши - "не подходит ОКВЭД 01, 02"
-Не менее 70% предложенных Шагов должны использовать продукты и/или сервисы из списка, где сначала идет название продукта, а потом что делает данные продукт/сервис -
+Не менее 70% предложенных Шагов должны использовать продукты и/или сервисы из актуального списка ниже.
+Если шаг использует продукт, явно укажи точное название продукта из списка в description или logic.
+Не придумывай продукты вне списка.
 """
-filename = "/app/data/products.txt"
-if os.path.exists(filename):
-    df = pd.read_csv(filename, sep=';')
-    if 'Название продукта' in df.columns and 'Что делает продукт/сервис' in df.columns:
-        new_df = df['Название продукта'] + ' - ' + df['Что делает продукт/сервис']
-        new_df = new_df.values.tolist()
-        for el in new_df:
-            PROMPT_B_DESC += el + "\n"
+PRODUCT_CATALOG_PROMPT = build_product_catalog_prompt()
+PROMPT_B_BASE = os.environ.get("PROMPT_B", PROMPT_B_DESC)
+PROMPT_B = f"{PROMPT_B_BASE}\n\nАктуальный список продуктов и сервисов:\n{PRODUCT_CATALOG_PROMPT}"
 
-PROMPT_B = os.environ.get("PROMPT_B", PROMPT_B_DESC)
+def get_prompt_b(compact=True):
+    catalog = build_product_catalog_prompt(compact=compact)
+    return f"{PROMPT_B_BASE}\n\nАктуальный список продуктов и сервисов:\n{catalog}"
 
 JSON_INSTRUCTIONS = """
 ВАЖНО: Отвечай строго в формате JSON — от 1 до 10 вариантов:
@@ -330,9 +525,11 @@ PROMPT_CLARIFY = """
 Твоя задача:
 Проверить входные данные клиента
 Определить, достаточно ли информации для разработки стратегий
+
 Если информации достаточно:
 верни:
 {"status": "ok"}
+
 Если информации недостаточно:
 Верни JSON строго формата:
 {
@@ -341,10 +538,12 @@ PROMPT_CLARIFY = """
 {
  "key": "company_age",
  "question": "Сколько лет компании?",
- "options": ["<1 года", "1–3 года", "3–5 лет", "5+ лет"]
+ "options": ["<1 года", "1–3 года", "3–5 лет", "5+ лет"],
+ "explanation": "Возраст компании влияет на доступность кредитных продуктов и господдержки — для молодых компаний стратегии принципиально другие"
 }
 ]
 }
+
 Правила:
 максимум 5 вопросов
 максимум 3 варианта ответа на каждый вопрос
@@ -353,7 +552,77 @@ PROMPT_CLARIFY = """
 не задавай очевидных или повторяющихся вопросов
 key должен быть понятным (snake_case)
 никаких q1, q2, q3
+
+ДОПОЛНИТЕЛЬНОЕ ПРАВИЛО — проверка отрасли на детализацию:
+
+Проверь, нужно ли уточнять отрасль.
+Отрасль считается размытой, если это 1-2 общих слова без специфики:
+"торговля", "производство", "услуги", "строительство", "транспорт", "сельское хозяйство", "IT"
+
+Детализация отрасли ОБЯЗАТЕЛЬНА, если описанная проблема попадает под один из 6 триггеров:
+
+1. Регуляторика — если проблема касается лицензирования, сертификации, разрешений, compliance
+   → нужна конкретная под-отрасль (медицина, фарма, алкоголь, авиация и т.д.)
+2. Физика продукта — если проблема касается издержек, логистики, хранения, порчи товара
+   → нужна информация о типе товара (скоропорт, опасный груз, хрупкое, сыпучее и т.д.)
+3. Рыночная структура — если проблема касается продаж, выручки, клиентов, конкуренции
+   → нужно знать B2B или B2C, длинный или короткий цикл сделки
+4. Цепочка поставок — если проблема касается поставщиков, импорта, дефицита, сроков
+   → нужна информация об источнике (локальные/импорт, сезонность)
+5. Экономика под-отрасли — если проблема касается рентабельности, затрат, ценообразования
+   → нужна специфика (капиталоёмкость, маржинальность, доля постоянных издержек зависит от под-отрасли)
+6. Госучастие — если проблема касается госзакупок, субсидий, регулируемых цен
+   → нужно знать, работает ли отрасль с госзаказом
+
+Если отрасль размытая И проблема попадает под триггер — задай ОДИН уточняющий вопрос про отрасль.
+В поле explanation объясни КОНКРЕТНО для этой ситуации, почему детализация отрасли важна.
+Пиши explanation на русском, простым языком, 2-3 предложения.
+
+Пример explanation для ситуации "рост издержек" и отрасли "торговля":
+"Для снижения издержек важно знать физику товара. Скоропортящиеся продукты требуют холодильников и имеют списание — а стройматериалы нет. Стратегия для этих случаев будет принципиально разной."
+
+Не задавай вопрос про отрасль, если она уже указана детально или если проблема НЕ требует конкретики отрасли.
 """
+
+PROMPT_INDUSTRY_CHECK = """
+Ты — бизнес-аналитик. Реши, нужно ли уточнять отрасль ПЕРЕД генерацией стратегии.
+
+Главное правило: по умолчанию industry_detail_required = false.
+Спрашивай отрасль только если без неё ты не можешь предложить релевантную стратегию
+или подобрать уместные продукты — то есть отрасль меняет саму логику решения.
+
+Алгоритм:
+1. Проверь, указана ли отрасль уже в company_industry или в описании ситуации.
+   Если да — industry_detail_required = false, извлеки контекст в extracted_industry_context.
+2. Задай себе тест: «Две компании разного масштаба, но с одной и той же формулировкой проблемы —
+   нужны ли им принципиально разные стратегии ТОЛЬКО из-за отрасли?»
+   Если нет — industry_detail_required = false.
+3. Не спрашивай отрасль из-за второстепенных слов (расходы, клиенты, платежи),
+   если корневая проблема решается одинаково в большинстве отраслей.
+4. Спрашивай отрасль только если она влияет на: регуляторику, цепочку поставок,
+   сезонность спроса, тип клиентов B2B/B2C, лицензирование, отраслевые меры поддержки,
+   сравнение с отраслевым бенчмарком.
+5. Если industry_detail_required = true, обязательно заполни strategy_impact_if_unknown:
+   одно конкретное предложение, ЧТО именно в стратегии/шагах/продуктах изменится после ответа.
+   Без этого поля нельзя ставить industry_detail_required = true.
+
+Не задавай общих вопросов вроде «уточните отрасль» или «в какой отрасли работает компания».
+Вопрос должен быть привязан к ситуации и к решению, которое зависит от отрасли.
+
+Ответь строго JSON:
+{
+  "industry_detail_required": true или false,
+  "industry_context_sufficient": true или false,
+  "industry_context_found_in_description": true или false,
+  "trigger": "sales_demand | costs_margin | logistics_inventory | supply_chain | regulation | government | benchmark | none",
+  "initial_industry": "...",
+  "extracted_industry_context": "...",
+  "strategy_impact_if_unknown": "...",
+  "reason": "...",
+  "question": "..."
+}
+"""
+
 
 # === HELPERS ===
 def to_bool(value):
@@ -483,6 +752,855 @@ def call_openai_raw(system_prompt, user_message):
     )
     return json.loads(response.choices[0].message.content)
 
+def normalize_product_text(value):
+    text = str(value or "").lower().replace("ё", "е")
+    text = text.replace("sber", "сбер")
+    text = re.sub(r"\(\s*\d{6,}\s*\)", " ", text)
+    text = re.sub(r"[^a-zа-я0-9]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+def product_brand_variants(name):
+    variants = set()
+    raw = str(name or "").strip()
+    normalized = normalize_product_text(raw)
+    if not normalized:
+        return variants
+    variants.add(normalized)
+    for sep in (" – ", " - ", "—", "–"):
+        if sep in raw:
+            head = normalize_product_text(raw.split(sep, 1)[0])
+            if len(head) >= 4:
+                variants.add(head)
+    first_token = normalized.split(" ", 1)[0]
+    if len(first_token) >= 4 and first_token not in {"услуги", "сервис", "продукт", "платформа"}:
+        variants.add(first_token)
+    expanded = set(variants)
+    for variant in variants:
+        if "sber" in variant:
+            expanded.add(variant.replace("sber", "сбер"))
+        if "сбер" in variant:
+            expanded.add(variant.replace("сбер", "sber"))
+    return expanded
+
+def product_match_variants(name):
+    normalized = normalize_product_text(name)
+    brand_variants = product_brand_variants(name)
+    variants = set(brand_variants)
+    without_number = re.sub(r"^\d+\s+", "", normalized).strip()
+    if without_number:
+        variants.add(without_number)
+    without_album = re.sub(r"\bальбом\b.*$", "", without_number or normalized).strip()
+    if len(without_album) >= 12:
+        variants.add(without_album)
+    return [
+        variant for variant in variants
+        if len(variant) >= 8 or variant in brand_variants
+    ]
+
+def step_text_for_product_match(item):
+    return normalize_product_text(" ".join([
+        item.get("title", ""),
+        item.get("description", ""),
+        item.get("logic", ""),
+        item.get("criteria", ""),
+    ]))
+
+MIN_PRODUCT_MATCH_SCORE = 14
+
+STEP_ACTION_PATTERNS = {
+    "research": r"изуч|анализ|исслед|обзор|сравн|собра|проанализ|оцен|бенчмарк|практик|кейс|лучш.{0,12}опыт|монитор",
+    "implement": r"внедр|запуст|настро|разверн|созда|подключ|оформ|активир|внедри",
+    "hire": r"подбор|найм|нанят|ваканс|рекрут|привлеч.{0,16}кандидат|закрыть.{0,12}ваканс",
+    "retain": r"удерж|сниз.{0,12}текуч|мотивац|вовлеч|лояльност.{0,20}(сотрудник|персонал|кадр|команд)",
+    "payroll": r"зарплат|фот|выплат.{0,12}сотрудник",
+    "finance": r"кредит|финанс|заем|заём|кассов|разрыв|лимит|оборотн|депозит|вексел|облигаци",
+    "market": r"реклам|акци|продвижен|маркет|таргет|трафик|промо",
+    "sell": r"продаж|выручк|сделк|конверс|чек",
+    "train": r"обуч|повыш.{0,12}квалиф|тренинг|развит.{0,12}компетенц",
+    "survey": r"опрос|интервью|обратн.{0,12}связ",
+    "loyalty_setup": r"запуст.{0,16}лояльност|созда.{0,16}лояльност|программ.{0,16}лояльност",
+}
+
+STEP_DOMAIN_PATTERNS = {
+    "employee_hr": r"сотрудник|персонал|кадр|текуч|увольн|hr|штат|работник|команд",
+    "customer": r"клиент|покупател|потребител|посетител",
+    "customer_loyalty": r"лояльност.{0,24}(клиент|покупател)|удержан.{0,16}клиент|бонус.{0,16}клиент",
+    "payments": r"эквайринг|эквайр|оплат|платеж|платёж|терминал|безнал|pos",
+    "banking": r"рко|расчет|расчёт|счет|счёт|депозит|банк",
+    "construction": r"строител|девелоп|капремонт|жкх",
+    "logistics": r"логист|склад|достав|остат|запас",
+}
+
+PRODUCT_TAG_PATTERNS = {
+    "hiring": (r"работа\.?ру", r"\bhh\.?ru\b", r"авито работа", r"сберподбор", r"подбор сотрудник", r"поиск сотрудник", r"размещен.{0,12}ваканс"),
+    "partner_search": (r"подбор партнер",),
+    "customer_loyalty": (r"benefitty", r"лояльност.{0,20}(клиент|бизнес|спасибо)", r"спасибо", r"удержан.{0,12}клиент", r"бонус"),
+    "employee_retention": (r"work.?life", r"удержан.{0,12}сотрудник", r"вовлечен.{0,12}сотрудник"),
+    "employee_hr": (r"\bhr\b", r"saby", r"кадр", r"зарплат", r"(?<![а-я])персонал(?!из)", r"фот", r"кадров"),
+    "training": (r"обучен", r"образовательн", r"квалификац", r"сберуниверситет", r"алгоритмик"),
+    "payments": (r"эквайринг", r"эквайр", r"pos", r"терминал", r"платеж", r"платёж"),
+    "finance": (r"кредит", r"овердрафт", r"гарант", r"факторинг", r"лизинг", r"финанс", r"депозит", r"вексел", r"облигаци", r"репо"),
+    "marketing": (r"таргет", r"реклам", r"геоконтекст", r"продвижен", r"маркет"),
+    "analytics": (r"аналитик", r"монитор", r"прогноз"),
+    "banking": (r"рко", r"расчетн", r"расчётн", r"счет", r"депозит"),
+}
+
+ACTION_CAPABILITY_MAP = {
+    "research": {"analytics", "training", "customer_loyalty", "employee_retention", "employee_hr", "marketing"},
+    "implement": {"customer_loyalty", "employee_hr", "payments", "marketing", "training", "finance", "banking", "employee_retention"},
+    "hire": {"hiring"},
+    "retain": {"employee_retention", "employee_hr", "training"},
+    "payroll": {"employee_hr"},
+    "finance": {"finance"},
+    "market": {"marketing", "customer_loyalty"},
+    "sell": {"marketing", "payments", "analytics"},
+    "train": {"training"},
+    "survey": {"employee_hr", "analytics"},
+    "loyalty_setup": {"customer_loyalty", "employee_retention"},
+}
+
+DOMAIN_CAPABILITY_MAP = {
+    "employee_hr": {"employee_hr", "employee_retention", "training", "hiring"},
+    "customer": {"customer_loyalty", "marketing", "payments", "analytics"},
+    "customer_loyalty": {"customer_loyalty", "marketing"},
+    "payments": {"payments"},
+    "banking": {"banking", "finance"},
+    "construction": {"finance", "analytics"},
+    "logistics": {"finance", "analytics"},
+}
+
+def stem_token(token):
+    token = (token or "").lower().replace("ё", "е")
+    if len(token) < 4:
+        return token
+    suffixes = (
+        "ения", "ению", "ением", "ована", "овано", "ованы", "овани", "овать",
+        "ами", "ями", "ного", "ному", "ной", "ную", "ная", "ные", "ных", "ное",
+        "иями", "иях", "иям", "ов", "ам", "ах", "ой", "ей", "ий", "ие", "ия", "ию",
+        "ть", "ти", "ка", "ки", "ку", "ком", "ем", "ом", "ы", "и", "у", "а", "е",
+    )
+    for suffix in suffixes:
+        if len(token) > len(suffix) + 2 and token.endswith(suffix):
+            return token[:-len(suffix)]
+    return token
+
+def match_tokens(text):
+    return {
+        stem_token(token)
+        for token in normalize_product_text(text).split()
+        if len(stem_token(token)) >= 3
+    }
+
+def extract_step_intent(step):
+    text = step_text_for_product_match(step)
+    actions = {name for name, pattern in STEP_ACTION_PATTERNS.items() if re.search(pattern, text)}
+    domains = {name for name, pattern in STEP_DOMAIN_PATTERNS.items() if re.search(pattern, text)}
+    if re.search(r"лояльн", text) and "customer_loyalty" not in domains:
+        if domains & {"employee_hr"} or re.search(r"текуч|удерж|сотрудник|персонал|кадр", text):
+            domains.add("employee_hr")
+        elif domains & {"customer"}:
+            domains.add("customer_loyalty")
+    if not actions:
+        if re.search(r"изуч|анализ|практик|кейс", text):
+            actions.add("research")
+        elif is_hiring_context(text):
+            actions.add("hire")
+        else:
+            actions.add("implement")
+    elif "hire" in actions and not is_hiring_context(text):
+        actions.discard("hire")
+    if domains & {"banking"} or re.search(r"депозит|размещен.{0,16}средств", text):
+        actions.discard("loyalty_setup")
+    return {"text": text, "actions": actions, "domains": domains}
+
+def product_capabilities(product):
+    product_id = product["name"]
+    if product_id in _PRODUCT_CAPABILITIES_CACHE:
+        return _PRODUCT_CAPABILITIES_CACHE[product_id]
+    blob = normalize_product_text(
+        f"{product['name']} {product.get('description', '')} {product.get('problems', '')}"
+    )
+    tags = set()
+    for tag, patterns in PRODUCT_TAG_PATTERNS.items():
+        if any(re.search(pattern, blob) for pattern in patterns):
+            tags.add(tag)
+    if "hiring" in tags and "partner_search" in tags:
+        tags.discard("partner_search")
+    _PRODUCT_CAPABILITIES_CACHE[product_id] = tags
+    return tags
+
+def legacy_product_score(step, product, intent=None, caps=None):
+    intent = intent or extract_step_intent(step)
+    caps = caps if caps is not None else product_capabilities(product)
+    if not caps:
+        return 0
+    actions = intent["actions"]
+    domains = intent["domains"]
+    score = 0
+
+    for action in actions:
+        allowed = ACTION_CAPABILITY_MAP.get(action, set())
+        if caps & allowed:
+            score += 12
+        elif allowed:
+            score -= 10
+
+    for domain in domains:
+        aligned = DOMAIN_CAPABILITY_MAP.get(domain, set())
+        if caps & aligned:
+            score += 10
+
+    name_norm = normalize_product_text(product["name"])
+    step_tokens = match_tokens(intent["text"])
+    product_tokens = match_tokens(f"{product['name']} {product.get('description', '')}")
+    overlap = len(step_tokens & product_tokens)
+    score += min(overlap, 4)
+
+    if "hiring" in caps and "hire" not in actions:
+        score -= 30
+    if "partner_search" in caps and (domains & {"employee_hr"} or "hire" in actions):
+        score -= 35
+    if "payments" in caps and "payments" not in domains and "sell" not in actions:
+        score -= 30
+    step_capabilities = extract_step_capabilities(intent)
+    loyalty_relevant = (
+        "customer_loyalty" in domains
+        or "customer" in domains
+        or "customer_loyalty_program" in step_capabilities
+        or "loyalty_setup" in actions
+        or "market" in actions
+    )
+    if "customer_loyalty" in caps and "research" in actions and not loyalty_relevant:
+        score -= 20
+    if "customer_loyalty" in caps and domains & {"employee_hr"} and not loyalty_relevant:
+        score -= 25
+    if "employee_retention" in caps and domains & {"employee_hr"}:
+        score += 8
+    if "training" in caps and ("train" in actions or ("research" in actions and domains & {"employee_hr"})):
+        score += 6
+    if "таргет" in name_norm and actions & {"market", "sell"}:
+        score += 6
+    if name_norm in {
+        normalize_product_text("Рекламные услуги"),
+        normalize_product_text("Рекламная платформа"),
+    }:
+        score -= 4
+    return score
+
+def score_product_for_step(step, product, intent=None):
+    intent = intent or extract_step_intent(step)
+    caps = product_capabilities(product)
+    structured_score = score_product_by_metadata(step, product, intent, legacy_tags=caps)
+    if structured_score is not None:
+        if structured_score <= 0:
+            return 0
+        legacy_cap = 0 if extract_step_capabilities(intent) else 6
+        return structured_score + min(legacy_product_score(step, product, intent=intent, caps=caps), legacy_cap)
+    return legacy_product_score(step, product, intent=intent, caps=caps)
+
+def rank_products_for_step(step, products=None, limit=3, min_score=MIN_PRODUCT_MATCH_SCORE):
+    products = matchable_products(products)
+    intent = extract_step_intent(step)
+    scored = []
+    for product in products:
+        score = score_product_for_step(step, product, intent)
+        if score >= min_score:
+            scored.append((score, product))
+    scored.sort(key=lambda row: (-row[0], row[1]["name"]))
+    return [product for _, product in scored[:limit]]
+
+def detect_product_match_ambiguity(intent):
+    text = intent["text"]
+    questions = []
+    if re.search(r"лояльн", text) and "customer_loyalty" not in intent["domains"]:
+        if intent["domains"] & {"employee_hr"} or not (intent["domains"] & {"customer"}):
+            if "research" in intent["actions"] or "loyalty_setup" in intent["actions"]:
+                questions.append(
+                    "Программа лояльности в этом шаге относится к сотрудникам (удержание персонала) или к клиентам (бонусы покупателям)?"
+                )
+    if re.search(r"подбор", text) and intent["domains"] & {"employee_hr"} and "hire" not in intent["actions"]:
+        questions.append(
+            "Шаг про подбор сотрудников или подбор партнёров/подрядчиков?"
+        )
+    if not intent["domains"] and intent["actions"] & {"implement", "research"}:
+        questions.append(
+            "Для какого направления бизнеса выполняется шаг — это поможет точнее подобрать продукт банка."
+        )
+    return questions[:1]
+
+def matchable_products(products=None):
+    products = products if products is not None else load_product_catalog()
+    return [product for product in products if not is_product_excluded(product)]
+
+def match_products_for_step(step, products=None):
+    products = matchable_products(products)
+    intent = extract_step_intent(step)
+    explicit_names = detect_explicit_step_products(step, products, intent=intent)
+    if explicit_names:
+        by_name = {product["name"]: product for product in products}
+        product = by_name.get(explicit_names[0])
+        if product:
+            return {
+                "status": "matched",
+                "products": [build_step_product_payload(step, product, intent)],
+                "question": "",
+            }
+
+    scored = [
+        (score_product_for_step(step, product, intent), product)
+        for product in products
+    ]
+    scored = [(score, product) for score, product in scored if score >= MIN_PRODUCT_MATCH_SCORE]
+    scored.sort(key=lambda row: (-row[0], row[1]["name"]))
+
+    if len(scored) >= 2 and scored[0][0] - scored[1][0] < 4:
+        question = detect_product_match_ambiguity(intent)
+        if question:
+            return {"status": "needs_clarification", "products": [], "question": question[0]}
+
+    if not scored:
+        question = detect_product_match_ambiguity(intent)
+        return {
+            "status": "needs_clarification",
+            "products": [],
+            "question": question[0] if question else (
+                "Уточните цель шага: что именно нужно сделать и для кого (сотрудники, клиенты, финансы, продажи)?"
+            ),
+        }
+
+    return {
+        "status": "matched",
+        "products": [build_step_product_payload(step, scored[0][1], intent)],
+        "question": "",
+    }
+
+def build_step_product_payload(step, product, intent=None):
+    return {
+        "name": product["name"],
+        "description": product.get("description", ""),
+        "usage_hint": build_step_product_usage_hint(step, product, intent=intent),
+    }
+
+def detect_explicit_step_products(item, products=None, intent=None):
+    products = products if products is not None else load_product_catalog()
+    intent = intent or extract_step_intent(item)
+    step_text = intent["text"]
+    matched = []
+    for product in products:
+        name = product["name"]
+        for variant in product_match_variants(name):
+            if not variant or len(variant) < 8 or variant not in step_text:
+                continue
+            if score_product_for_step(item, product, intent) >= MIN_PRODUCT_MATCH_SCORE:
+                matched.append(name)
+                break
+    return matched
+
+def detect_step_products(item, products=None):
+    match = match_products_for_step(agent2_step_dict(item), products)
+    return [product["name"] for product in match["products"]]
+
+def agent2_step_dict(item):
+    if isinstance(item, dict):
+        return item
+    return {
+        "title": item.title,
+        "description": item.description,
+        "logic": item.logic,
+        "criteria": item.criteria,
+    }
+
+def recommend_step_products(item, products=None, limit=1):
+    return rank_products_for_step(agent2_step_dict(item), products, limit=limit)
+
+CAPABILITY_USAGE_HINTS = {
+    "hiring": "Закрывает задачу шага по поиску и привлечению персонала.",
+    "customer_loyalty": "Помогает реализовать шаг через программу лояльности для клиентов.",
+    "employee_retention": "Поддерживает удержание сотрудников — ключевую цель этого шага.",
+    "employee_hr": "Автоматизирует HR-процессы, необходимые для выполнения шага.",
+    "training": "Даёт инструменты обучения и развития, которые нужны на этом шаге.",
+    "payments": "Обеспечивает приём платежей, если шаг связан с оплатами.",
+    "finance": "Закрывает финансовую часть реализации шага.",
+    "marketing": "Поддерживает маркетинговую составляющую шага.",
+    "analytics": "Даёт аналитику и данные для принятия решений на этом шаге.",
+    "banking": "Упрощает расчётные операции, нужные для шага.",
+}
+
+def build_step_product_usage_hint(step, product, intent=None):
+    step = agent2_step_dict(step)
+    intent = intent or extract_step_intent(step)
+    caps = product_capabilities(product)
+    actions = intent["actions"]
+    domains = intent["domains"]
+    description = (product.get("description") or "").strip()
+
+    if "hire" in actions and "hiring" in caps:
+        return CAPABILITY_USAGE_HINTS["hiring"]
+    if "research" in actions and domains & {"employee_hr"} and "training" in caps:
+        return "Поможет изучить и внедрить практики развития и удержания персонала."
+    if "research" in actions and domains & {"employee_hr"} and "employee_retention" in caps:
+        return "Даст ориентиры по программам удержания сотрудников для этого шага."
+    if domains & {"employee_hr"} and "customer_loyalty" in caps:
+        return CAPABILITY_USAGE_HINTS["employee_retention"]
+    for cap in ("employee_retention", "employee_hr", "training", "hiring", "customer_loyalty", "marketing", "payments", "finance", "analytics", "banking"):
+        if cap in caps and cap in CAPABILITY_USAGE_HINTS:
+            if caps & ACTION_CAPABILITY_MAP.get(next(iter(actions), "implement"), set()) or caps & set().union(*(DOMAIN_CAPABILITY_MAP.get(d, set()) for d in domains)):
+                return CAPABILITY_USAGE_HINTS[cap]
+
+    problems = (product.get("problems") or "").strip()
+    if problems:
+        return f"По возможностям продукта: {problems}."
+    if description:
+        return f"Продукт закрывает задачу шага через: {description}."
+    title = (step.get("title") or "").strip()
+    if title:
+        return f"Подобран под задачу шага «{title}»."
+    return "Рекомендован для реализации этого шага."
+
+def get_step_bank_products(item, products=None):
+    return match_products_for_step(agent2_step_dict(item), products)["products"]
+
+def attach_bank_products_to_agent2_responses(responses, products=None):
+    products = products if products is not None else load_product_catalog()
+    for response in responses:
+        match = match_products_for_step(agent2_step_dict(response), products)
+        response.bank_products = match["products"]
+        response.product_match_status = match["status"]
+        response.product_clarification_question = match.get("question") or ""
+    return responses
+
+def product_usage_report(items, products=None):
+    products = products if products is not None else load_product_catalog()
+    total = len(items)
+    required = math.ceil(total * PRODUCT_STEP_RATIO) if total else 0
+    usage = []
+    for item in items:
+        usage.append(detect_step_products(item, products))
+    used_count = sum(1 for matches in usage if matches)
+    return {
+        "total": total,
+        "required": required,
+        "used_count": used_count,
+        "ok": used_count >= required,
+        "usage": usage,
+    }
+
+def load_known_steps():
+    path = os.path.join(os.path.dirname(__file__), "steps.xlsx")
+    if not os.path.exists(path):
+        path = "steps.xlsx"
+    if not os.path.exists(path):
+        return []
+    mtime = os.path.getmtime(path)
+    cache = _KNOWN_STEPS_CACHE
+    if cache["mtime"] == mtime:
+        return cache["steps"]
+    try:
+        df = pd.read_excel(path)
+        steps = [normalize_product_text(row) for row in df["steps"] if pd.notna(row)]
+    except Exception:
+        steps = []
+    cache["mtime"] = mtime
+    cache["steps"] = steps
+    return steps
+
+def mark_implemented_steps_local(items):
+    known_steps = load_known_steps()
+    updated = []
+    for item in items:
+        row = dict(item)
+        title = normalize_product_text(row.get("title", ""))
+        if known_steps and title:
+            row["implemented"] = any(
+                title in step or step in title
+                for step in known_steps
+                if len(step) >= 8
+            )
+        else:
+            row["implemented"] = False
+        updated.append(row)
+    return updated
+
+def ensure_agent2_product_usage_local(items, products, expected_count):
+    expected_count = expected_count or len(items)
+    current = [dict(item) for item in items[:expected_count]]
+    report = product_usage_report(current, products)
+    if not report["ok"]:
+        current = annotate_steps_with_products(current, products, report["required"])
+    if len(current) < expected_count:
+        raise RuntimeError(f"AI вернул недостаточно шагов: {len(current)} из {expected_count}")
+    return current[:expected_count]
+
+def annotate_steps_with_products(items, products, required):
+    updated = [dict(item) for item in items]
+    for item in updated:
+        if sum(1 for step in updated if detect_step_products(step, products)) >= required:
+            break
+        if detect_step_products(item, products):
+            continue
+        recommended = recommend_step_products(item, products, limit=1)
+        if not recommended:
+            recommended = rank_products_for_step(item, products, limit=1, min_score=6)
+        if not recommended:
+            continue
+        product_name = recommended[0]["name"]
+        description = (item.get("description") or "").strip()
+        item["description"] = f"{description} Использовать продукт: {product_name}.".strip()
+    return updated
+
+def generate_agent2_items(message, expected_count):
+    products = load_product_catalog()
+    items = call_openai(get_prompt_b(), message)[:expected_count]
+    items = ensure_agent2_product_usage_local(items, products, expected_count)
+    return mark_implemented_steps_local(items)[:expected_count]
+
+
+def ensure_situation_check_schema():
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.engine)
+    if "situation_checks" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("situation_checks")}
+    statements = []
+    if "slot_questions" not in columns:
+        statements.append("ALTER TABLE situation_checks ADD COLUMN slot_questions TEXT")
+    if "slots_filled" not in columns:
+        statements.append("ALTER TABLE situation_checks ADD COLUMN slots_filled TEXT")
+    for statement in statements:
+        db.session.execute(text(statement))
+    if statements:
+        db.session.commit()
+
+def call_situation_check(text):
+    return analyze_situation_slots(text, call_openai_raw)
+
+def save_situation_check(input_id, text, result):
+    attempt_number = SituationCheck.query.filter_by(input_id=input_id).count() + 1
+    clarify_payload = result.get("clarify_payload") or result.get("slot_questions") or {}
+    check = SituationCheck(
+        input_id=input_id,
+        original_text=text,
+        normalized_text=result.get("normalized_text") or None,
+        ok=result["ok"],
+        score=result["score"],
+        missing=json.dumps(result.get("missing") or [], ensure_ascii=False),
+        reason=result.get("reason") or None,
+        rewrite_hint=result.get("rewrite_hint") or None,
+        example=result.get("example") or None,
+        slot_questions=json.dumps(clarify_payload, ensure_ascii=False) if clarify_payload else None,
+        slots_filled=json.dumps(result.get("slots_filled") or {}, ensure_ascii=False) or None,
+        source=result.get("source") or "llm",
+        status="passed" if result["ok"] else "failed",
+        attempt_number=attempt_number,
+    )
+    db.session.add(check)
+    return check
+
+
+def apply_situation_to_input(user_input, situation_description, situation_result=None):
+    fields = extract_user_input_fields(user_input.input_text)
+    final_description = situation_description
+    if situation_result and situation_result.get("ok") and situation_result.get("normalized_text"):
+        final_description = situation_result["normalized_text"]
+    user_input.input_text = build_input_text(
+        company_size=fields["company_size"],
+        company_industry=fields["company_industry"],
+        situation_description=final_description,
+        product_name=fields["product_name"],
+        signals=fields["signals"],
+    )
+    return final_description
+
+
+def extract_user_input_fields(input_text):
+    text = input_text or ""
+    company_size = ""
+    company_industry = ""
+    product_name = ""
+    situation_description = ""
+    size_match = re.search(r"^Размер компании:\s*(.*)$", text, flags=re.MULTILINE)
+    industry_match = re.search(r"^Отрасль компании:\s*(.*)$", text, flags=re.MULTILINE)
+    product_match = re.search(r"^Продукт:\s*(.*)$", text, flags=re.MULTILINE)
+    situation_match = re.search(
+        r"Описание ситуации у компании:\s*(.*?)(?:\nСигнал:|\nСигналы:|\nПродукт:|\nДополнительное условие:|\Z)",
+        text,
+        flags=re.DOTALL
+    )
+    if size_match:
+        company_size = size_match.group(1).strip()
+    if industry_match:
+        company_industry = industry_match.group(1).strip()
+    if product_match:
+        product_name = product_match.group(1).strip()
+    signals = parse_signals_from_text(text)
+    if situation_match:
+        situation_description = situation_match.group(1).strip()
+    return {
+        "company_size": company_size,
+        "company_industry": company_industry,
+        "product_name": product_name,
+        "signals": signals,
+        "signal": signals_joined(signals),
+        "situation_description": situation_description,
+    }
+
+def build_input_text(company_size=None, company_industry=None, situation_description=None, product_name=None, signals=None, signal=None):
+    lines = []
+    if company_size:
+        lines.append(f"Размер компании: {company_size}")
+    if company_industry:
+        lines.append(f"Отрасль компании: {company_industry}")
+    if situation_description:
+        lines.append(f"Описание ситуации у компании: {situation_description}")
+    lines.extend(format_signal_lines(normalize_signals_list(signals=signals, signal=signal)))
+    if product_name:
+        lines.append(f"Продукт: {product_name}")
+        lines.append("Дополнительное условие: если указанный продукт релевантен ситуации клиента, обязательно явно используй именно этот продукт в предлагаемых стратегиях. Не игнорируй продукт и не заменяй его абстрактными формулировками.")
+    return "\n".join(lines).strip()
+
+GENERIC_INDUSTRY_QUESTION_PATTERNS = (
+    r"уточните\s+отрасл",
+    r"какова\s+отрасл",
+    r"какую\s+отрасл",
+    r"какой\s+отрасл",
+    r"в\s+какой\s+отрасл",
+    r"какая\s+отрасл",
+    r"укажите\s+отрасл",
+    r"назовите\s+отрасл",
+    r"представляете.{0,20}отрасл",
+)
+
+def industry_context_text(company_industry="", situation_description="", extracted_industry_context=""):
+    parts = [
+        (company_industry or "").strip(),
+        (extracted_industry_context or "").strip(),
+        extract_industry_from_description(situation_description),
+    ]
+    return next((part for part in parts if part), "")
+
+def extract_industry_from_description(situation_description):
+    text = (situation_description or "").strip()
+    if not text:
+        return ""
+    patterns = (
+        r"(?:отрасл[ьи]\s+(?:компани[ияе]|бизнеса?)\s*[-—:]\s*)([^.;,\n]{3,80})",
+        r"(?:работаем\s+в\s+)([^.;,\n]{3,80})",
+        r"(?:компания\s+в\s+сфере\s+)([^.;,\n]{3,80})",
+        r"((?:производственн|торгов\w+|строительн\w+|розничн\w+|оптов\w+|сервисн\w+|логистическ\w+)\w*\s+компани\w+)",
+        r"(?:\bв\s+)(ритейл[еу]?|розниц[еу]|производств[еу]|строительств[еу]|логистик[еу]|it|айти|медицин[еу]|общепит[еу]|horeca|хорек[ае]|оптов[ойе]\s+торговл[еи]|e-?commerce|ecommerce)",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    return ""
+
+def industry_benchmark_required(situation_description, signal=None):
+    text = f"{situation_description or ''} {signal or ''}".lower()
+    benchmark_patterns = (
+        r"выше.{0,30}отрасл",
+        r"ниже.{0,30}отрасл",
+        r"по\s+отрасл",
+        r"отраслев.{0,20}норм",
+        r"отраслев.{0,20}средн",
+        r"характерн.{0,20}для\s+отрасл",
+    )
+    return any(re.search(pattern, text) for pattern in benchmark_patterns)
+
+def is_generic_industry_question(question):
+    question = (question or "").strip().lower()
+    if not question:
+        return True
+    return any(re.search(pattern, question) for pattern in GENERIC_INDUSTRY_QUESTION_PATTERNS)
+
+def is_specific_strategy_impact(strategy_impact):
+    text = re.sub(r"\s+", " ", (strategy_impact or "").strip())
+    if len(text) < 40:
+        return False
+    generic_markers = (
+        "стратегия будет более релевантной",
+        "нужна отрасль",
+        "уточнить отрасль",
+        "зависит от отрасли",
+        "важно знать отрасль",
+        "без отрасли сложно",
+    )
+    lowered = text.lower()
+    return not any(marker in lowered for marker in generic_markers)
+
+INDUSTRY_CHECK_DB_FIELDS = {
+    "initial_industry",
+    "extracted_industry_context",
+    "industry_detail_required",
+    "industry_context_sufficient",
+    "industry_context_found_in_description",
+    "trigger",
+    "reason",
+    "question",
+}
+
+def industry_check_db_payload(check_data):
+    return {key: check_data[key] for key in INDUSTRY_CHECK_DB_FIELDS if key in check_data}
+
+def industry_check_not_required(reason, company_industry="", extracted_industry_context="", found_in_description=False):
+    return {
+        "industry_detail_required": False,
+        "industry_context_sufficient": True,
+        "industry_context_found_in_description": found_in_description or bool((company_industry or "").strip() or (extracted_industry_context or "").strip()),
+        "trigger": "none",
+        "initial_industry": company_industry or "",
+        "extracted_industry_context": extracted_industry_context or "",
+        "strategy_impact_if_unknown": "",
+        "reason": reason,
+        "question": "",
+    }
+
+def finalize_industry_check(result, situation_description, signal=None, company_industry=""):
+    result = dict(result)
+    known_industry = industry_context_text(
+        company_industry,
+        situation_description,
+        result.get("extracted_industry_context", ""),
+    )
+    if known_industry:
+        result["industry_detail_required"] = False
+        result["industry_context_sufficient"] = True
+        result["industry_context_found_in_description"] = True
+        result["extracted_industry_context"] = known_industry
+        result["question"] = ""
+        result["strategy_impact_if_unknown"] = ""
+        if not result.get("reason"):
+            result["reason"] = "Отраслевой контекст уже есть во входных данных."
+        return result
+
+    if industry_benchmark_required(situation_description, signal):
+        result["industry_detail_required"] = True
+        result["industry_context_sufficient"] = False
+        result["trigger"] = "benchmark"
+        if not result.get("strategy_impact_if_unknown"):
+            result["strategy_impact_if_unknown"] = (
+                "Нужен отраслевой бенчмарк, чтобы сравнить показатель клиента с нормой по отрасли и выбрать стратегию."
+            )
+        if is_generic_industry_question(result.get("question")):
+            result["question"] = (
+                "В какой отрасли нужно сравнить показатель с рыночной нормой, чтобы оценить масштаб проблемы?"
+            )
+        if not result.get("reason"):
+            result["reason"] = "В ситуации есть сравнение с отраслью — без неё нельзя оценить масштаб проблемы."
+        return result
+
+    if not result.get("industry_detail_required"):
+        result["question"] = ""
+        result["strategy_impact_if_unknown"] = ""
+        return result
+
+    strategy_impact = result.get("strategy_impact_if_unknown", "")
+    question = result.get("question", "")
+    if not is_specific_strategy_impact(strategy_impact) or is_generic_industry_question(question):
+        fallback_reason = (
+            result.get("reason")
+            or "Отрасль не меняет выбор стратегии: в описании достаточно контекста для релевантного решения."
+        )
+        return industry_check_not_required(
+            fallback_reason,
+            company_industry=company_industry,
+            extracted_industry_context=result.get("extracted_industry_context", ""),
+        )
+
+    return result
+
+def normalize_industry_check(data, fallback_industry):
+    trigger = str(data.get("trigger") or "none").strip()
+    allowed_triggers = {
+        "sales_demand", "costs_margin", "logistics_inventory", "supply_chain",
+        "regulation", "government", "benchmark", "none",
+    }
+    if trigger not in allowed_triggers:
+        trigger = "none"
+    required = to_bool(data.get("industry_detail_required"))
+    question = str(data.get("question") or "").strip()
+    strategy_impact = str(data.get("strategy_impact_if_unknown") or "").strip()
+    if not required:
+        question = ""
+        strategy_impact = ""
+    return {
+        "industry_detail_required": required,
+        "industry_context_sufficient": to_bool(data.get("industry_context_sufficient")),
+        "industry_context_found_in_description": to_bool(data.get("industry_context_found_in_description")),
+        "trigger": trigger,
+        "initial_industry": str(data.get("initial_industry") or fallback_industry or "").strip(),
+        "extracted_industry_context": str(data.get("extracted_industry_context") or "").strip(),
+        "strategy_impact_if_unknown": strategy_impact,
+        "reason": str(data.get("reason") or "").strip(),
+        "question": question,
+    }
+
+def call_industry_check(company_size, company_industry, situation_description, product_name, signal=None):
+    known_industry = industry_context_text(company_industry, situation_description)
+    if known_industry:
+        return normalize_industry_check(
+            industry_check_not_required(
+                "Отраслевой контекст уже указан во входных данных.",
+                company_industry=company_industry or known_industry,
+                extracted_industry_context=known_industry,
+                found_in_description=True,
+            ),
+            company_industry,
+        )
+
+    message = json.dumps({
+        "company_size": company_size,
+        "company_industry": company_industry,
+        "situation_description": situation_description,
+        "product_name": product_name,
+        "signal": signal,
+    }, ensure_ascii=False)
+    data = call_openai_raw(PROMPT_INDUSTRY_CHECK, message)
+    result = normalize_industry_check(data, company_industry)
+    return finalize_industry_check(result, situation_description, signal, company_industry)
+
+def create_clarification_if_needed(input_id):
+    user_input = get_input_or_403(input_id)
+    final_input = build_final_input(user_input, None)
+    clarify = call_openai_raw(PROMPT_CLARIFY, final_input)
+    if clarify.get("status") == "need_clarification":
+        questions = clarify.get("questions") or []
+        if questions:
+            existing = Clarification.query.filter_by(input_id=input_id).first()
+            if existing:
+                existing.questions = json.dumps(questions, ensure_ascii=False)
+                existing.answers = None
+                existing.status = "pending"
+            else:
+                db.session.add(Clarification(input_id=input_id, questions=json.dumps(questions, ensure_ascii=False)))
+            return True
+    return False
+
+def run_context_checks_after_situation(input_id):
+    user_input = get_input_or_403(input_id)
+    fields = extract_user_input_fields(user_input.input_text)
+    check_data = call_industry_check(
+        fields["company_size"],
+        fields["company_industry"],
+        fields["situation_description"],
+        fields["product_name"],
+        signals_joined(fields["signals"]),
+    )
+    industry_check = IndustryCheck(
+        input_id=user_input.id,
+        status="needs_answer" if check_data["industry_detail_required"] and check_data["question"] else "checked",
+        **industry_check_db_payload(check_data)
+    )
+    db.session.add(industry_check)
+    db.session.commit()
+    if industry_check.status == "needs_answer":
+        return redirect(auth_url("context_clarify", input_id=user_input.id))
+    if create_clarification_if_needed(user_input.id):
+        db.session.commit()
+        return redirect(auth_url("clarify", input_id=user_input.id))
+    db.session.commit()
+    return redirect(auth_url("process_after_clarify", input_id=user_input.id))
+
 def call_openai_check_str(item):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key: raise RuntimeError("OPENAI_API_KEY is not configured")
@@ -564,7 +1682,7 @@ def flash_ai_error():
 def validate_custom_item(fields, prompt_type):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key: return True, ""
-    base_prompt = PROMPT_A if prompt_type == "agent1" else PROMPT_B
+    base_prompt = PROMPT_A if prompt_type == "agent1" else get_prompt_b()
     system_prompt = f"Ты — строгий валидатор. Тебе дан промпт с правилами для генерации вариантов:\n{base_prompt}\nПользователь добавил свой вариант вручную. Проверь, соответствует ли он правилам промпта выше.\nВерни JSON строго в формате:\n{{\"ok\": true}} — если вариант соответствует правилам,\n{{\"ok\": false, \"reason\": \"краткое объяснение на русском, почему не соответствует\"}} — если не соответствует.\nПроверяй только смысловое соответствие правилам, не придирайся к формулировкам."
     item_text = json.dumps(fields, ensure_ascii=False)
     try:
@@ -654,8 +1772,7 @@ def create_more_agent2_responses(selected_id):
         f"Верни ответ в формате JSON с одним шагом."
     )
 
-    items = call_openai(PROMPT_B, message)
-    final_items = call_openai_check_stp(items)[:1]  # enforce exactly 1 new step
+    final_items = generate_agent2_items(message, 1)
     start_number = max([r.item_number for r in previous_responses], default=0)
     for index, item in enumerate(final_items, start=1):
         item["item_number"] = start_number + index
@@ -669,6 +1786,17 @@ def next_agent2_item_number(selected_id):
 
 def build_final_input(user_input, clarification):
     base = user_input.input_text
+    industry_check = IndustryCheck.query.filter_by(input_id=user_input.id).order_by(IndustryCheck.created_at.desc()).first()
+    industry_parts = []
+    if industry_check:
+        if industry_check.extracted_industry_context:
+            industry_parts.append(f"Отраслевая специфика из описания: {industry_check.extracted_industry_context}")
+        if industry_check.answer:
+            industry_parts.append(f"Ответ пользователя по отраслевой специфике: {industry_check.answer}")
+        if industry_check.reason:
+            industry_parts.append(f"Причина проверки отрасли: {industry_check.reason}")
+    if industry_parts:
+        base += "\n\nУточнение отрасли:\n" + "\n".join(industry_parts)
     if clarification and clarification.answers:
         answers = json.loads(clarification.answers)
         extra = "\n".join([f"{key}: {value if value else 'не указано'}" for key, value in answers.items()])
@@ -754,6 +1882,17 @@ def build_results_pdf(selected, final, clarification=None, steps=None):
             b1_html += f"<br/><b>Ответы на уточняющие вопросы:</b><br/>{qa_text}<br/><br/>"
         except Exception:
             pass
+    industry_check = IndustryCheck.query.filter_by(input_id=selected.input_id).order_by(IndustryCheck.created_at.desc()).first()
+    if industry_check:
+        industry_lines = []
+        if industry_check.extracted_industry_context:
+            industry_lines.append(f"<b>Из описания:</b> {industry_check.extracted_industry_context}")
+        if industry_check.answer:
+            industry_lines.append(f"<b>Ответ пользователя:</b> {industry_check.answer}")
+        if industry_check.reason:
+            industry_lines.append(f"<b>Причина проверки:</b> {industry_check.reason}")
+        if industry_lines:
+            b1_html += "<br/><b>Отраслевая специфика:</b><br/>" + "<br/><br/>".join(industry_lines) + "<br/><br/>"
     story.append(make_block("Блок 1: Вводные данные и уточнения", b1_html))
     story.append(Spacer(1, 10))
 
@@ -879,7 +2018,7 @@ def register_routes(app):
 
     @app.route("/")
     @login_required
-    def index(): return render_template("index.html")
+    def index(): return render_template("index.html", signals=load_all_signals())
 
     @app.route("/history")
     @login_required
@@ -892,7 +2031,15 @@ def register_routes(app):
             selected = Agent1Selected.query.filter_by(input_id=inp.id).first()
             rounds_b = 0
             completed = False
-            open_url = auth_url("review", input_id=inp.id)
+            fields = extract_user_input_fields(inp.input_text)
+            latest_situation = SituationCheck.query.filter_by(input_id=inp.id).order_by(SituationCheck.created_at.desc()).first()
+            pending_industry = IndustryCheck.query.filter_by(input_id=inp.id, status="needs_answer").first()
+            if latest_situation and not latest_situation.ok:
+                open_url = auth_url("situation_clarify", input_id=inp.id)
+            elif not fields["company_size"] or pending_industry:
+                open_url = auth_url("context_clarify", input_id=inp.id)
+            else:
+                open_url = auth_url("review", input_id=inp.id)
             if selected:
                 count_b = Agent2Response.query.filter_by(selected_id=selected.id).count()
                 rounds_b = count_b
@@ -915,32 +2062,230 @@ def register_routes(app):
     @app.route("/process", methods=["POST"])
     @login_required
     def process():
-        company_size = request.form.get("company_size", "").strip()
-        company_industry = request.form.get("company_industry", "").strip()
         product_name = request.form.get("product_name", "").strip()
+        signals = [item.strip() for item in request.form.getlist("signal") if item.strip()]
         situation_description = request.form.get("situation_description", "").strip()
-        required_fields = [company_size, company_industry, situation_description]
-        if not all(required_fields):
-            flash("Заполните все 3 обязательных поля", "warning")
+        if not situation_description and not signals:
+            flash("Опишите ситуацию компании или выберите хотя бы один сигнал.", "warning")
             return redirect(url_for("index"))
-        input_text = f"Размер компании: {company_size}\nОтрасль компании: {company_industry}\nОписание ситуации у компании: {situation_description}".strip()
-        if product_name:
-            input_text += f"\nПродукт: {product_name}\nДополнительное условие: если указанный продукт релевантен ситуации клиента, обязательно явно используй именно этот продукт в предлагаемых стратегиях. Не игнорируй продукт и не заменяй его абстрактными формулировками.".strip()
+        if signals and not signals_all_exist(signals):
+            flash("Выберите сигналы только из списка.", "warning")
+            return redirect(url_for("index"))
+        input_text = build_input_text(
+            situation_description=situation_description,
+            product_name=product_name,
+            signals=signals,
+        )
         user_input = UserInput(user_id=current_user_id(), input_text=input_text, session_token=str(uuid.uuid4()))
         db.session.add(user_input); db.session.commit()
         try:
-            clarify = call_openai_raw(PROMPT_CLARIFY, input_text)
-            if clarify.get("status") == "need_clarification":
-                db.session.add(Clarification(input_id=user_input.id, questions=json.dumps(clarify["questions"])))
+            if situation_description:
+                situation_result = call_situation_check(situation_description)
+                situation_check = save_situation_check(user_input.id, situation_description, situation_result)
+                if situation_check.ok:
+                    apply_situation_to_input(user_input, situation_description, situation_result)
                 db.session.commit()
-                return redirect(url_for("clarify", input_id=user_input.id))
+                if not situation_check.ok:
+                    return redirect(auth_url("situation_clarify", input_id=user_input.id))
+            return redirect(auth_url("context_clarify", input_id=user_input.id))
         except Exception as e:
             db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
             return redirect(url_for("index"))
-        return redirect(url_for("process_after_clarify", input_id=user_input.id))
+        return redirect(auth_url("context_clarify", input_id=user_input.id))
+
+    @app.route("/situation_clarify/<int:input_id>")
+    @login_required
+    def situation_clarify(input_id):
+        user_input = get_input_or_403(input_id)
+        situation_check = SituationCheck.query.filter_by(input_id=input_id).order_by(SituationCheck.created_at.desc()).first()
+        if not situation_check or situation_check.ok:
+            return redirect(auth_url("context_clarify", input_id=input_id))
+        fields = extract_user_input_fields(user_input.input_text)
+        missing = json.loads(situation_check.missing or "[]")
+        clarify_state = load_situation_clarify_state(situation_check)
+        return render_template(
+            "situation_clarify.html",
+            situation_check=situation_check,
+            situation_text=fields["situation_description"],
+            missing=missing,
+            slot_questions=clarify_state.get("slot_questions") or {},
+            focus_question=clarify_state.get("focus_question"),
+            clarify_mode=clarify_state.get("mode"),
+            slot_labels=SITUATION_SLOT_LABELS,
+            situation_soft_length=SITUATION_SOFT_LENGTH,
+            situation_hard_length=SITUATION_HARD_LENGTH,
+        )
+
+    @app.route("/situation_clarify/<int:input_id>", methods=["POST"])
+    @login_required
+    def situation_clarify_submit(input_id):
+        user_input = get_input_or_403(input_id)
+        fields = extract_user_input_fields(user_input.input_text)
+        latest_check = SituationCheck.query.filter_by(input_id=input_id).order_by(SituationCheck.created_at.desc()).first()
+        clarify_state = load_situation_clarify_state(latest_check)
+        clarify_mode = clarify_state.get("mode")
+        slot_questions = clarify_state.get("slot_questions") or {}
+        focus_question = clarify_state.get("focus_question")
+
+        if clarify_mode == "focus" and focus_question:
+            selected = request.form.get("focus_problem", "").strip()
+            if not selected:
+                flash("Выберите главную проблему, которую решаем в первую очередь.", "warning")
+                return redirect(auth_url("situation_clarify", input_id=input_id))
+            if selected == "Другое (уточню сам)":
+                selected = request.form.get("focus_problem_custom", "").strip()
+                if not selected:
+                    flash("Уточните главную проблему или выберите вариант из списка.", "warning")
+                    return redirect(auth_url("situation_clarify", input_id=input_id))
+            extracted_slots = load_situation_slots_filled(latest_check)
+            situation_description = build_situation_from_focus(
+                fields["situation_description"],
+                selected,
+                extracted_slots,
+            )
+        elif slot_questions:
+            slot_answers = {}
+            for key in slot_questions:
+                selected = request.form.get(f"slot_{key}", "").strip()
+                if not selected:
+                    flash(
+                        f"Выберите вариант: {SITUATION_SLOT_LABELS.get(key, key)}.",
+                        "warning",
+                    )
+                    return redirect(auth_url("situation_clarify", input_id=input_id))
+                if selected == "Другое (уточню сам)":
+                    custom = request.form.get(f"slot_{key}_custom", "").strip()
+                    if not custom:
+                        flash("Уточните свой вариант или выберите другой пункт из списка.", "warning")
+                        return redirect(auth_url("situation_clarify", input_id=input_id))
+                    slot_answers[f"{key}_custom"] = custom
+                slot_answers[key] = selected
+            extracted_slots = load_situation_slots_filled(latest_check)
+            situation_description = build_situation_from_slots(
+                fields["situation_description"],
+                slot_answers,
+                extracted_slots,
+            )
+        else:
+            situation_description = request.form.get("situation_description", "").strip()
+            if not situation_description:
+                flash("Опишите ситуацию компании, чтобы продолжить.", "warning")
+                return redirect(auth_url("situation_clarify", input_id=input_id))
+        try:
+            situation_result = call_situation_check(situation_description)
+            situation_check = save_situation_check(input_id, situation_description, situation_result)
+            apply_situation_to_input(user_input, situation_description, situation_result)
+            db.session.commit()
+            if not situation_check.ok:
+                return redirect(auth_url("situation_clarify", input_id=input_id))
+            return redirect(auth_url("context_clarify", input_id=input_id))
+        except Exception as e:
+            db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
+            return redirect(auth_url("situation_clarify", input_id=input_id))
+
+    @app.route("/context_clarify/<int:input_id>")
+    @login_required
+    def context_clarify(input_id):
+        user_input = get_input_or_403(input_id)
+        fields = extract_user_input_fields(user_input.input_text)
+        latest_situation = SituationCheck.query.filter_by(input_id=input_id).order_by(SituationCheck.created_at.desc()).first()
+        if latest_situation and not latest_situation.ok:
+            return redirect(auth_url("situation_clarify", input_id=input_id))
+        industry_check = IndustryCheck.query.filter_by(input_id=input_id, status="needs_answer").order_by(IndustryCheck.created_at.desc()).first()
+        if fields["company_size"] and not industry_check:
+            return redirect(auth_url("process_after_clarify", input_id=input_id))
+        return render_template(
+            "context_clarify.html",
+            fields=fields,
+            industry_check=industry_check,
+        )
+
+    @app.route("/context_clarify/<int:input_id>", methods=["POST"])
+    @login_required
+    def context_clarify_submit(input_id):
+        user_input = get_input_or_403(input_id)
+        fields = extract_user_input_fields(user_input.input_text)
+        company_size = request.form.get("company_size", "").strip()
+        industry_answer = request.form.get("industry_answer", "").strip()
+        if not company_size:
+            flash("Выберите сегмент клиента, чтобы продолжить.", "warning")
+            return redirect(auth_url("context_clarify", input_id=input_id))
+        pending_industry = IndustryCheck.query.filter_by(input_id=input_id, status="needs_answer").order_by(IndustryCheck.created_at.desc()).first()
+        if pending_industry:
+            if not industry_answer:
+                flash("Уточните отраслевую специфику, чтобы продолжить.", "warning")
+                return redirect(auth_url("context_clarify", input_id=input_id))
+            pending_industry.answer = industry_answer
+            pending_industry.status = "done"
+            pending_industry.industry_context_sufficient = True
+            company_industry = industry_answer
+            user_input.input_text = build_input_text(
+                company_size=company_size,
+                company_industry=company_industry,
+                situation_description=fields["situation_description"],
+                product_name=fields["product_name"],
+                signals=fields["signals"],
+            )
+            try:
+                if create_clarification_if_needed(input_id):
+                    db.session.commit()
+                    return redirect(auth_url("clarify", input_id=input_id))
+                db.session.commit()
+                return redirect(auth_url("process_after_clarify", input_id=input_id))
+            except Exception as e:
+                db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
+                return redirect(auth_url("context_clarify", input_id=input_id))
+
+        user_input.input_text = build_input_text(
+            company_size=company_size,
+            company_industry=fields["company_industry"],
+            situation_description=fields["situation_description"],
+            product_name=fields["product_name"],
+            signals=fields["signals"],
+        )
+        db.session.commit()
+        try:
+            return run_context_checks_after_situation(input_id)
+        except Exception as e:
+            db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
+            return redirect(auth_url("context_clarify", input_id=input_id))
+
+    @app.route("/industry_clarify/<int:input_id>")
+    @login_required
+    def industry_clarify(input_id):
+        get_input_or_403(input_id)
+        industry_check = IndustryCheck.query.filter_by(input_id=input_id).order_by(IndustryCheck.created_at.desc()).first()
+        if not industry_check or industry_check.status != "needs_answer":
+            return redirect(auth_url("process_after_clarify", input_id=input_id))
+        return render_template("industry_clarify.html", industry_check=industry_check)
+
+    @app.route("/industry_clarify/<int:input_id>", methods=["POST"])
+    @login_required
+    def industry_clarify_submit(input_id):
+        get_input_or_403(input_id)
+        industry_check = IndustryCheck.query.filter_by(input_id=input_id).order_by(IndustryCheck.created_at.desc()).first_or_404()
+        answer = request.form.get("industry_answer", "").strip()
+        if not answer:
+            flash("Уточните отраслевую специфику, чтобы продолжить.", "warning")
+            return redirect(auth_url("industry_clarify", input_id=input_id))
+        industry_check.answer = answer
+        industry_check.status = "done"
+        industry_check.industry_context_sufficient = True
+        db.session.commit()
+        try:
+            if create_clarification_if_needed(input_id):
+                db.session.commit()
+                return redirect(auth_url("clarify", input_id=input_id))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
+            return redirect(auth_url("industry_clarify", input_id=input_id))
+        return redirect(auth_url("process_after_clarify", input_id=input_id))
 
     @app.route("/clarify/<int:input_id>")
+    @login_required
     def clarify(input_id):
+        get_input_or_403(input_id)
         clarification = Clarification.query.filter_by(input_id=input_id).first()
         if not clarification: return redirect(url_for("process_after_clarify", input_id=input_id))
         questions = json.loads(clarification.questions)
@@ -967,6 +2312,12 @@ def register_routes(app):
     @login_required
     def process_after_clarify(input_id):
         user_input = get_input_or_403(input_id)
+        latest_situation = SituationCheck.query.filter_by(input_id=input_id).order_by(SituationCheck.created_at.desc()).first()
+        if latest_situation and not latest_situation.ok:
+            return redirect(auth_url("situation_clarify", input_id=input_id))
+        pending_industry = IndustryCheck.query.filter_by(input_id=input_id, status="needs_answer").first()
+        if pending_industry:
+            return redirect(auth_url("industry_clarify", input_id=input_id))
         clarification = Clarification.query.filter_by(input_id=input_id).first()
         final_input = build_final_input(user_input, clarification)
         message = f"{final_input}\n\nВАЖНО: сформируй ровно ОДНУ наилучшую стратегию для данной ситуации. Формат ответа JSON с одним вариантом."
@@ -999,11 +2350,23 @@ def register_routes(app):
                 text_lines = [f"{q.get('question')}: {answers.get(q.get('key')) or 'не указано'}" for q in questions]
                 parsed_clarification = "\n".join(text_lines)
             except Exception: pass
+        industry_check = IndustryCheck.query.filter_by(input_id=input_id).order_by(IndustryCheck.created_at.desc()).first()
+        parsed_industry_check = None
+        if industry_check:
+            industry_lines = []
+            if industry_check.extracted_industry_context:
+                industry_lines.append(f"Из описания: {industry_check.extracted_industry_context}")
+            if industry_check.answer:
+                industry_lines.append(f"Ответ пользователя: {industry_check.answer}")
+            if industry_check.reason:
+                industry_lines.append(f"Причина проверки: {industry_check.reason}")
+            parsed_industry_check = "\n".join(industry_lines) if industry_lines else None
         return render_template("review.html", user_input=user_input,
                                current_strategy=current_strategy,
                                rejected_strategies=rejected_strategies,
                                accepted=accepted, clarification=clarification,
-                               parsed_clarification=parsed_clarification)
+                               parsed_clarification=parsed_clarification,
+                               parsed_industry_check=parsed_industry_check)
 
     @app.route("/more/<int:input_id>", methods=["POST"])
     @login_required
@@ -1111,13 +2474,13 @@ def register_routes(app):
                 f"ВАЖНО: сгенерируй ровно 5 шагов. Формат ответа JSON."
             )
             try:
-                items = call_openai(PROMPT_B, message)
-                final_items = call_openai_check_stp(items)
+                final_items = generate_agent2_items(message, 5)
                 for item in final_items: db.session.add(Agent2Response(selected_id=selected_id, status="pending", **item))
                 db.session.commit()
                 responses = Agent2Response.query.filter_by(selected_id=selected_id).order_by(Agent2Response.item_number.asc()).all()
             except Exception as e: db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
         accepted = any(item.status == "accepted" for item in responses)
+        attach_bank_products_to_agent2_responses(responses)
         return render_template("agent2.html", selected=selected, responses=responses, accepted=accepted)
 
     @app.route("/agent2/more/<int:selected_id>", methods=["POST"])

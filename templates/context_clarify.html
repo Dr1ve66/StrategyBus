@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-body p-4 p-lg-5">
+        <div class="mb-4">
+          <div class="eyebrow mb-2">Контекст клиента</div>
+          <h1 class="h2 page-title mb-2">Уточните сегмент{% if industry_check %} и отрасль{% endif %}</h1>
+          <p class="page-subtitle mb-0">
+            Эти данные помогут адаптировать стратегию под масштаб клиента{% if industry_check %} и отраслевую специфику ситуации{% endif %}.
+          </p>
+        </div>
+
+        {% if fields.signals %}
+        <div class="alert alert-primary rounded-4">
+          <div class="fw-semibold mb-2">Выбранные сигналы</div>
+          <ul class="mb-0 ps-3">
+            {% for item in fields.signals %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        {% if industry_check and industry_check.reason %}
+        <div class="alert alert-primary rounded-4">
+          {{ industry_check.reason }}
+        </div>
+        {% endif %}
+
+        <form method="post" data-ai-form
+              data-ai-title="Проверяем контекст"
+              data-ai-subtitle="После этого продолжим анализ ситуации клиента…">
+          <div class="mb-4">
+            <label class="form-label fw-semibold" for="company_size">
+              Сегмент клиента
+            </label>
+            <select
+              id="company_size"
+              class="form-select"
+              name="company_size"
+              required
+              autofocus
+            >
+              <option value="">Выберите сегмент</option>
+              <option
+                value="Микро и малый бизнес (до 100 сотрудников, выручка до 800 млн ₽/год)"
+                {% if fields.company_size == "Микро и малый бизнес (до 100 сотрудников, выручка до 800 млн ₽/год)" %}selected{% endif %}
+              >
+                Микро и малый бизнес
+              </option>
+              <option
+                value="Средний и крупный бизнес (от 100 сотрудников или выручка от 800 млн ₽/год)"
+                {% if fields.company_size == "Средний и крупный бизнес (от 100 сотрудников или выручка от 800 млн ₽/год)" %}selected{% endif %}
+              >
+                Средний и крупный бизнес
+              </option>
+            </select>
+            <div class="form-text">
+              Сегмент нужен всегда: он влияет на масштаб предложенных действий и продуктов.
+            </div>
+          </div>
+
+          {% if industry_check %}
+          <div class="mb-4">
+            <label class="form-label fw-semibold" for="industry_answer">
+              {{ industry_check.question or "Опишите отраслевую специфику компании." }}
+            </label>
+            <textarea
+              id="industry_answer"
+              class="form-control"
+              name="industry_answer"
+              rows="5"
+              required
+              placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
+            >{{ industry_check.answer or fields.company_industry }}</textarea>
+            <div class="form-text">
+              Отрасль уточняем только когда она важна для качества ответа.
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="d-flex justify-content-end mt-4">
+            <button class="btn btn-primary btn-lg" type="submit">
+              Продолжить
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

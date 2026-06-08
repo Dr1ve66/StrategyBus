@@ -1,17 +1,18 @@
 {% extends 'base.html' %}
 {% from '_cards.html' import render_cards %}
 {% block content %}
-<div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between gap-3">
   <div>
-    <h1 class="h2 fw-bold">Выбор вариантов Шагов</h1>
-    <p class="text-muted mb-0">Можно выбрать несколько пунктов (не менее 3) результата Агента 2 или добавить собственный пункт.</p>
+    <div class="eyebrow mb-2">Этап 2</div>
+    <h1 class="h2 page-title">План действий</h1>
+    <p class="page-subtitle mb-0">Выберите один или несколько шагов для реализации стратегии.</p>
   </div>
-  <a class="btn btn-outline-secondary align-self-start" href="{{ url_for('review', input_id=selected.input_id) }}">Назад к выбору Стратегии</a>
+  <a class="btn btn-outline-primary align-self-start" href="{{ url_for('review', input_id=selected.input_id) }}">Назад к стратегии</a>
 </div>
 
 <div class="card border-success mb-4 rounded-4">
-  <div class="card-header bg-success-subtle fw-semibold">Выбранные пункты Агента 1</div>
-  <div class="card-body">
+  <div class="card-header bg-success-subtle fw-semibold px-4 py-3">Выбранная стратегия</div>
+  <div class="card-body p-4">
     <h2 class="h5">{{ selected.final_title }}</h2>
     <p class="text-prewrap">{{ selected.final_description }}</p>
     <div class="row g-3">
@@ -37,12 +38,12 @@
       
       <!-- Кнопка генерации новых шагов -->
       <form method="post" action="{{ url_for('more_agent2', selected_id=selected.id) }}" data-ai-form
-            data-ai-title="⚙️ Генерируем новые шаги"
-            data-ai-subtitle="Агент придумывает следующие действия по стратегии…">
-        <button class="btn btn-outline-primary btn-lg" type="submit">Генерация нового Шага</button>
+            data-ai-title="Генерируем новый шаг"
+            data-ai-subtitle="Учитываем выбранную стратегию, продукты и ваши отказы…">
+        <button class="btn btn-outline-primary btn-lg" type="submit">Сгенерировать ещё шаг</button>
       </form>
 
-      <button class="btn btn-outline-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#customItemModal">➕ Добавить свой пункт</button>
+      <button class="btn btn-outline-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#customItemModal">Добавить свой шаг</button>
       <form method="post" action="{{ url_for('agent2_finish', selected_id=selected.id) }}">
         <button id="continueButton" class="btn {{ 'btn-success' if accepted else 'btn-secondary' }} btn-lg" type="submit" {% if not accepted %}disabled{% endif %}>Завершить →</button>
       </form>

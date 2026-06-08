@@ -1,0 +1,6284 @@
+{
+  "version": 2,
+  "capabilities_glossary": {
+    "advertising": "Размещение и ведение рекламных кампаний",
+    "audience_targeting": "Сегментация аудитории и таргетированное продвижение",
+    "business_analytics": "Бизнес-аналитика, отчёты, дашборды",
+    "consumer_analytics": "Аналитика поведения и сегментов клиентов",
+    "competitor_analysis": "Анализ конкурентов и конкурентной среды",
+    "marketplace_analytics": "Аналитика маркетплейсов и конкурентов на площадках",
+    "marketplace_onboarding": "Вывод и сопровождение продаж на маркетплейсах",
+    "predictive_analytics": "Прогнозирование и предиктивная аналитика",
+    "geo_analytics": "Геоаналитика и анализ локаций",
+    "employee_hiring": "Подбор и найм сотрудников",
+    "partner_matching": "Поиск партнёров и подрядчиков",
+    "hr_operations": "Кадровый учёт, HR-процессы, зарплата",
+    "employee_retention": "Удержание и вовлечённость сотрудников",
+    "payroll": "Расчёт зарплаты и выплат",
+    "employee_training": "Обучение и развитие сотрудников",
+    "customer_loyalty_program": "Программы лояльности для клиентов",
+    "payment_acceptance": "Приём безналичных и онлайн-платежей",
+    "business_financing": "Кредиты, гарантии, факторинг, лизинг",
+    "business_banking": "РКО и расчётные операции",
+    "bank_guarantee": "Банковские гарантии",
+    "factoring": "Факторинг дебиторской задолженности",
+    "leasing_financing": "Лизинговое финансирование",
+    "currency_hedging": "Валютное хеджирование",
+    "insurance": "Страхование и защита",
+    "legal_support": "Юридическая поддержка",
+    "accounting": "Бухгалтерский учёт",
+    "tax_reporting": "Налоговая отчётность",
+    "electronic_document_flow": "Электронный документооборот",
+    "electronic_signature": "Электронная подпись",
+    "website_creation": "Создание сайтов",
+    "crm_sales": "CRM и управление продажами",
+    "sales_management": "Управление продажами",
+    "online_booking": "Онлайн-запись клиентов",
+    "hotel_management": "Управление отелем",
+    "restaurant_automation": "Автоматизация ресторанов",
+    "construction_supervision": "Строительный инжиниринг и сопровождение",
+    "real_estate_services": "Услуги по недвижимости",
+    "real_estate_analytics": "Аналитика недвижимости",
+    "logistics": "Логистика и транспорт",
+    "ai_assistant": "ИИ-ассистенты и автоматизация",
+    "business_automation": "Автоматизация бизнес-процессов",
+    "cloud_infrastructure": "Облачная инфраструктура",
+    "it_outsourcing": "ИТ-аутсорсинг",
+    "cybersecurity": "Кибербезопасность",
+    "compliance": "Комплаенс",
+    "risk_management": "Управление рисками",
+    "counterparty_check": "Проверка контрагентов",
+    "business_registration": "Регистрация бизнеса",
+    "self_employed_management": "Работа с самозанятыми",
+    "procurement_platform": "B2B-закупки",
+    "tender_platform": "Электронные торги и тендеры",
+    "tender_participation": "Участие в тендерах",
+    "operational_efficiency": "Повышение операционной эффективности",
+    "international_payments": "Международные расчёты",
+    "currency_control": "Валютный контроль",
+    "ved_consulting": "Консалтинг по ВЭД",
+    "cash_collection": "Инкассация",
+    "self_collection": "Самоинкассация",
+    "securities": "Операции с ценными бумагами",
+    "treasury": "Казначейство и размещение средств",
+    "premium_banking": "Премиальное обслуживание",
+    "medical_services": "Медицина и здоровье сотрудников",
+    "video_conferencing": "Видеоконференции",
+    "lead_generation": "Генерация лидов",
+    "speech_analytics": "Речевая аналитика",
+    "custom_projects": "Индивидуальные/нестандартные решения",
+    "catch_all_banking": "Обобщённый банковский продукт",
+    "catch_all_partner": "Партнёрский сервис общего назначения",
+    "asset_realization": "Реализация залогового имущества",
+    "tips_service": "Сервис безналичных чаевых",
+    "tax_refund_service": "Tax Free / возврат НДС иностранцам",
+    "background_music": "Фоновая музыка для бизнеса",
+    "retail_services": "Сервисы для розничной точки",
+    "developer_financing": "Проектное финансирование девелоперов"
+  },
+  "step_archetypes_glossary": {
+    "competitor_research": "Исследование конкурентов",
+    "market_research": "Исследование рынка",
+    "launch_advertising": "Запуск рекламы",
+    "improve_ad_performance": "Повышение эффективности рекламы",
+    "employee_hiring": "Подбор персонала",
+    "partner_matching": "Поиск партнёров",
+    "customer_loyalty_program": "Лояльность клиентов",
+    "employee_retention": "Удержание сотрудников",
+    "payment_acceptance": "Приём платежей",
+    "business_financing": "Финансирование",
+    "business_banking": "РКО и расчёты",
+    "business_analytics": "Бизнес-аналитика",
+    "marketplace_operations": "Работа на маркетплейсах",
+    "accounting_tax": "Бухгалтерия и налоги",
+    "legal_support": "Юридическая поддержка",
+    "construction_management": "Управление строительством",
+    "restaurant_operations": "Ресторанный бизнес",
+    "hotel_operations": "Гостиничный бизнес",
+    "sales_management": "Управление продажами",
+    "employee_training": "Обучение сотрудников",
+    "international_trade": "ВЭД и международная торговля",
+    "tender_participation": "Тендеры и госзакупки",
+    "risk_management": "Управление рисками",
+    "it_infrastructure": "ИТ-инфраструктура",
+    "it_security": "ИБ",
+    "business_automation": "Автоматизация",
+    "customer_service_automation": "Автоматизация обслуживания клиентов",
+    "website_creation": "Создание сайта",
+    "procurement": "Закупки",
+    "real_estate": "Недвижимость",
+    "logistics": "Логистика",
+    "cash_operations": "Работа с наличными",
+    "treasury": "Казначейство",
+    "employee_wellness": "Здоровье сотрудников",
+    "compliance": "Комплаенс",
+    "self_employed_management": "Самозанятые",
+    "business_registration": "Регистрация бизнеса",
+    "operational_efficiency": "Операционная эффективность",
+    "strategic_consulting": "Стратегический консалтинг",
+    "custom_solutions": "Кастомные решения",
+    "asset_realization": "Реализация активов",
+    "staff_tips": "Чаевые персоналу",
+    "tax_free_operations": "Tax Free для иностранных покупателей",
+    "background_music": "Фоновая музыка",
+    "retail_services": "Сервисы для розницы"
+  },
+  "products": {
+    "Инжиниринг и сопровождение строительства": {
+      "capabilities": [
+        "compliance",
+        "construction_supervision",
+        "counterparty_check",
+        "real_estate_services",
+        "risk_management"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "compliance",
+        "construction_management",
+        "real_estate",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Консультация по РКО": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_banking"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "HR-платформа Saby": {
+      "capabilities": [
+        "hr_operations",
+        "employee_hiring",
+        "employee_retention",
+        "payroll"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "partner_matching",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "employee_hiring",
+        "employee_retention"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://saby.ru/staff",
+        "https://saby.ru/staff/recruitment"
+      ],
+      "web_note": "Кадры, зарплата, подбор, публикация вакансий, ЭДО."
+    },
+    "Личная защита+": {
+      "capabilities": [
+        "compliance",
+        "counterparty_check",
+        "insurance",
+        "medical_services",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "compliance",
+        "employee_wellness",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "21. Договорная гарантия/ гарантия качества": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "BenefittY – платформа управления программой лояльности": {
+      "capabilities": [
+        "customer_loyalty_program",
+        "consumer_analytics"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring"
+      ],
+      "step_archetypes": [
+        "business_analytics",
+        "customer_loyalty_program",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://benefitty.ru/about/"
+      ],
+      "web_note": "SaaS программы лояльности, бонусы, акции, CRM клиентов."
+    },
+    "Консультация по ИИ": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Панель Туризм": {
+      "capabilities": [
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://sberanalytics.ru/"
+      ],
+      "web_note": "Аналитика туристического рынка."
+    },
+    "Овердрафтный кредит Стандарт индивидуальная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Консультация по спецсчету капремонта": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "25. Налоговая гарантия возмещения НДС": {
+      "capabilities": [
+        "accounting",
+        "bank_guarantee",
+        "business_financing",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax",
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Расчетные счета ЮЛ/ИП": {
+      "capabilities": [
+        "business_banking"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business"
+      ],
+      "web_note": "РКО для ЮЛ и ИП."
+    },
+    "Оборотный кредит с льготным периодом КВК публичная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "СберБизнес.УСН онлайн": {
+      "capabilities": [
+        "accounting",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Опция \"Безлимитные платежи юрлицам в другие банки\"": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Toka – сервис для управления рестораном": {
+      "capabilities": [
+        "restaurant_automation",
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research",
+        "restaurant_operations"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://toka.rest/"
+      ],
+      "web_note": "Автоматизация ресторана."
+    },
+    "Международные расчеты корпоративных клиентов с участием партнерских структур": {
+      "capabilities": [
+        "currency_control",
+        "international_payments",
+        "ved_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "international_trade"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "38. Основное финансирование в рамках Продукта \"2 в 1\"": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Отчетность в государственные органы в составе пакета услуг": {
+      "capabilities": [
+        "accounting",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Юрист для бизнеса в составе пакета услуг": {
+      "capabilities": [
+        "legal_support"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "legal_support"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Юрист для бизнеса в пакете."
+    },
+    "Корпоративные облигации до погашения": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "СберАналитика": {
+      "capabilities": [
+        "business_analytics",
+        "competitor_analysis",
+        "geo_analytics",
+        "consumer_analytics",
+        "predictive_analytics"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/businessapps/analitika-dlya-biznesa",
+        "https://sberanalytics.ru/products/panel_retail"
+      ],
+      "web_note": "Сравнение с конкурентами, геоаналитика, панели ритейла/ассортимента."
+    },
+    "Бухгалтерия для ИП в составе пакета услуг": {
+      "capabilities": [
+        "accounting",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Работа.ру в составе пакета услуг": {
+      "capabilities": [
+        "employee_hiring"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "partner_matching",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "employee_hiring"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Размещение вакансий и подбор через Работа.ру."
+    },
+    "Активация ЖКХ": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Пакет услуг «ЛЁГКИЙ СТАРТ»": {
+      "capabilities": [
+        "business_registration"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_registration"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "21. Финансирование операций корпоративного лизинга": {
+      "capabilities": [
+        "leasing_financing",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberleasing.ru/"
+      ],
+      "web_note": "Финансирование корпоративного лизинга."
+    },
+    "Оборотный кредит - Финансирование подрядчика, выполняющего строительство ИЖС": {
+      "capabilities": [
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Опция \"Переводы физлицам для НКО 150 т.р.\"": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Реструктуризация ММБ": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сайт-визитка от нейросети": {
+      "capabilities": [
+        "website_creation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "website_creation"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Генерация сайта-визитки нейросетью."
+    },
+    "Неснижаемые остатки": {
+      "capabilities": [
+        "business_banking"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "39.3. Кредит под будущую прибыль в рамках Продукта «3 в 1»": {
+      "capabilities": [
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "AI сервисы мониторинга и прогнозирования": {
+      "capabilities": [
+        "ai_assistant",
+        "business_analytics",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "business_automation",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Цифровая платформа непрерывного обучения": {
+      "capabilities": [
+        "corporate_training",
+        "employee_training"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "17. Гарантия возврата займа на оборотные цели": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Активация Управление продажами": {
+      "capabilities": [
+        "crm_sales",
+        "sales_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "sales_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Пакет услуг \"Только для селлеров\" с небанковскими сервисами": {
+      "capabilities": [
+        "competitor_analysis",
+        "marketplace_analytics",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сервисная модель и эффективность": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Цифровой помощник врача ТОП-3": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "medical_services"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation",
+        "employee_wellness"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "SberCRM": {
+      "capabilities": [
+        "crm_sales",
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research",
+        "sales_management"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "CRM продаж и клиентов в экосистеме Сбера."
+    },
+    "TravelLine - Платформа управления гостиничным бизнесом": {
+      "capabilities": [
+        "hotel_management",
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "hotel_operations",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.travelline.ru/"
+      ],
+      "web_note": "PMS для отелей: бронирование, аналитика."
+    },
+    "Регистрация Бизнеса": {
+      "capabilities": [
+        "business_registration"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_registration"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Регистрация ИП/ООО через СберБизнес."
+    },
+    "29. Комплементарное финансирование уставной деятельности Заемщика под залог Объектов коммерческой недвижимости": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Робот-оператор": {
+      "capabilities": [
+        "voice_robot",
+        "customer_service_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "customer_service_automation"
+      ],
+      "source": "web",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Голосовой робот-оператор."
+    },
+    "Геоинформационные системы": {
+      "capabilities": [
+        "business_analytics",
+        "geo_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "18. Контрактный кредит для зертнотрейдеров": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Аналитика бизнеса": {
+      "capabilities": [
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/businessapps/analitika-dlya-biznesa"
+      ],
+      "web_note": "Внутренняя бизнес-аналитика в СберБизнес."
+    },
+    "Операции займа ценных бумаг": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Операции РЕПО": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Веб-платформа для контроля и управления строительством": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "MPSTATS — платформа для аналитики маркетплейсов": {
+      "capabilities": [
+        "marketplace_analytics",
+        "competitor_analysis",
+        "business_analytics"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://mpstats.io/",
+        "https://mpstats.io/instruments/analytics"
+      ],
+      "web_note": "Аналитика WB/Ozon/ЯМ, конкуренты, ниши, цены, спрос."
+    },
+    "СберБизнес.Giga-assistant": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "ИИ-ассистент для бизнес-задач."
+    },
+    "53. Финансирование текущей деятельности Контрактников и Подрядчиков": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "24. Финансирование проектов жилищного строительства с использованием эскроу": {
+      "capabilities": [
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Факторинг Регресс": {
+      "capabilities": [
+        "business_financing",
+        "factoring"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Аккредитивы выданные с покрытием за счёт собственных средств клиентов - внутрироссийские": {
+      "capabilities": [
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "international_payments",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "international_trade",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "КУ Оформление справки о ПД": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Агентский факторинг": {
+      "capabilities": [
+        "business_financing",
+        "factoring"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Услуги торгового эквайринга": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/bankingservice/acquiring"
+      ],
+      "web_note": "Приём платежей через терминалы."
+    },
+    "6. Тендерная гарантия": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "tender_participation",
+        "tender_platform"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "3.1 Гарантия исполнения договорных обязательств": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Кредитная бизнес-карта": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Корпоративное обучение": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "corporate_training",
+        "employee_training"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation",
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Программные и аппаратные решения с интегрированным ИИ": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Инкассация": {
+      "capabilities": [
+        "cash_collection",
+        "logistics",
+        "self_collection"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "cash_operations",
+        "logistics"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сайт под ключ": {
+      "capabilities": [
+        "website_creation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "website_creation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сегментация аудитории и таргетинг": {
+      "capabilities": [
+        "advertising",
+        "audience_targeting"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "improve_ad_performance",
+        "launch_advertising"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://sbertarget.ru/"
+      ],
+      "web_note": "Таргетинг и сегментация для рекламы."
+    },
+    "Yclients - Онлайн-запись и автоматизация": {
+      "capabilities": [
+        "online_booking",
+        "crm_sales"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "customer_service_automation",
+        "sales_management"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.yclients.com/"
+      ],
+      "web_note": "Онлайн-запись и автоматизация для сферы услуг."
+    },
+    "Самоинкассация": {
+      "capabilities": [
+        "cash_collection",
+        "self_collection"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "cash_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Образовательный профиль клиента": {
+      "capabilities": [
+        "employee_retention",
+        "hr_operations"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_hiring",
+        "employee_retention"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Платформа управления рисками бизнеса": {
+      "capabilities": [
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "compliance",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "7. Гарантия в пользу таможенных органов": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "currency_control",
+        "international_payments",
+        "ved_consulting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "international_trade",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Программа лояльности \"СберБизнес Спасибо\"": {
+      "capabilities": [
+        "customer_loyalty_program"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring"
+      ],
+      "step_archetypes": [
+        "customer_loyalty_program"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Лояльность для бизнес-клиентов."
+    },
+    "Автоматизация и аутсорсинг ИТ- сервисов": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Партнёрская программа цифровой трансформации": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "АС Транспортные решения": {
+      "capabilities": [
+        "logistics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "logistics"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сервис повышения продаж на сайте": {
+      "capabilities": [
+        "website_creation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "website_creation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Образовательные программы от Алгоритмики": {
+      "capabilities": [
+        "corporate_training",
+        "employee_training"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Чат-боты для бизнеса": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Аналитика потребителя": {
+      "capabilities": [
+        "consumer_analytics",
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/businessapps/analitika-dlya-biznesa"
+      ],
+      "web_note": "Аналитика поведения потребителей."
+    },
+    "Аналитика жилой и коммерческой недвижимости": {
+      "capabilities": [
+        "business_analytics",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "construction_management",
+        "market_research",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Аналитика ассортимента": {
+      "capabilities": [
+        "business_analytics",
+        "consumer_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://sberanalytics.ru/products/panel_retail"
+      ],
+      "web_note": "Панель ассортимента."
+    },
+    "hh.ru – размещение вакансий": {
+      "capabilities": [
+        "employee_hiring"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "partner_matching",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "employee_hiring"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://hh.ru/"
+      ],
+      "web_note": "Публикация вакансий на hh.ru."
+    },
+    "Оборотный кредит Стандарт индивидуальная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Work-Life Balance": {
+      "capabilities": [
+        "employee_retention",
+        "hr_operations"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_hiring",
+        "employee_retention"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Time2Pay": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Корпоративный личный кабинет удостоверяющего центра": {
+      "capabilities": [
+        "electronic_document_flow",
+        "electronic_signature"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Смарт-диспетчер недвижимости": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Расчетное обслуживание": {
+      "capabilities": [
+        "business_banking"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business"
+      ],
+      "web_note": "Расчётное обслуживание."
+    },
+    "Сбер А: Тендерная платформа для застройщиков": {
+      "capabilities": [
+        "tender_participation",
+        "tender_platform"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Валютный форвард с предоплатой": {
+      "capabilities": [
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "currency_hedging",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "МиниКАСКО": {
+      "capabilities": [
+        "insurance",
+        "logistics"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "logistics",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Конверсионные операции в рамках РКО": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_banking"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сбер ID B2B": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Защита от угроз БПЛА": {
+      "capabilities": [
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "compliance",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Умные устройства": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Расчеты и платежи": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Авито Работа – поиск сотрудников": {
+      "capabilities": [
+        "employee_hiring"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "partner_matching",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "employee_hiring"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.avito.ru/rabota"
+      ],
+      "web_note": "Поиск сотрудников на Авито Работа."
+    },
+    "Геоаналитика Bestplace": {
+      "capabilities": [
+        "geo_analytics",
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Геоаналитика локаций (часть СберАналитики)."
+    },
+    "Производственная медицина": {
+      "capabilities": [
+        "medical_services"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_wellness"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Подбор партнёров": {
+      "capabilities": [
+        "partner_matching"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "partner_matching"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Поиск партнёров и подрядчиков, не найм сотрудников."
+    },
+    "Сбер Таргет": {
+      "capabilities": [
+        "advertising",
+        "audience_targeting",
+        "consumer_analytics"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "business_analytics",
+        "improve_ad_performance",
+        "launch_advertising",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://sbertarget.ru/",
+        "https://www.sberbank.com/ru/s_m_business/nbs/sberlead"
+      ],
+      "web_note": "Запуск рекламных кампаний, таргетинг аудитории; аналитика ЦА, не исследование конкурентов."
+    },
+    "Купер B2B": {
+      "capabilities": [
+        "procurement_platform"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "procurement"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "B2B-закупки (Купер для бизнеса)."
+    },
+    "Предпроектный бридж": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Saby Presto": {
+      "capabilities": [
+        "restaurant_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "restaurant_operations"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://saby.ru/presto"
+      ],
+      "web_note": "Автоматизация HoReCa."
+    },
+    "Медиация": {
+      "capabilities": [
+        "legal_support"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "legal_support"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Corporate Business Development": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Налоговые вычеты клиентам": {
+      "capabilities": [
+        "accounting",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "СберБизнес. Недвижимость": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Консоль - работа с самозанятыми": {
+      "capabilities": [
+        "self_employed_management",
+        "payroll"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_retention",
+        "self_employed_management"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Выплаты и учёт самозанятых."
+    },
+    "Консалтинговые услуги в сфере инвестиций и ГЧП": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Консультационные услуги": {
+      "capabilities": [
+        "operational_efficiency"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Портал бухгалтера": {
+      "capabilities": [
+        "accounting",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Портал для бухгалтеров."
+    },
+    "Быстрые лиды": {
+      "capabilities": [
+        "crm_sales",
+        "sales_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "sales_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Вовлечение объектов недвижимости в налоговый оборот": {
+      "capabilities": [
+        "accounting",
+        "construction_supervision",
+        "real_estate_services",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Опция \"100 платежей юр. лицам в другие банки\"": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Интенсивы по цифровым навыкам": {
+      "capabilities": [
+        "corporate_training",
+        "employee_training"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Нестор.БРИФ": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Платежи ЖКХ. Безналичные платежи (по реквизитам)": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сбербанк Первый": {
+      "capabilities": [
+        "premium_banking"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "26. Налоговая гарантия возмещения налога по ст.203 НК РФ": {
+      "capabilities": [
+        "accounting",
+        "bank_guarantee",
+        "business_financing",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax",
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Защита бизнеса 360": {
+      "capabilities": [
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "compliance",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "31.1. Начальное финансирование в рамках финансирования проектов комплексного развития территорий": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Подключение Клиента к маркетплейсу Мегамаркет": {
+      "capabilities": [
+        "competitor_analysis",
+        "marketplace_analytics",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "14. Гарантия платежа непроектного Принципала": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Моя бухгалтерия Аутсорсинг": {
+      "capabilities": [
+        "accounting",
+        "ai_assistant",
+        "business_automation",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax",
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Все в плюсе": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Комплексная диагностика организма": {
+      "capabilities": [
+        "medical_services",
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_wellness",
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Облачные Услуги Cloud.ru": {
+      "capabilities": [
+        "cloud_infrastructure",
+        "cybersecurity",
+        "it_outsourcing"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "it_infrastructure",
+        "it_security"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Готовые образовательные решения": {
+      "capabilities": [
+        "corporate_training",
+        "employee_training"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Доставка до маркетплейсов": {
+      "capabilities": [
+        "competitor_analysis",
+        "logistics",
+        "marketplace_analytics",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "logistics",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Кастомизированные программы": {
+      "capabilities": [
+        "corporate_training",
+        "employee_retention",
+        "employee_training",
+        "hr_operations"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_hiring",
+        "employee_retention",
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Продукты PlatformV": {
+      "capabilities": [
+        "cloud_infrastructure",
+        "cybersecurity",
+        "it_outsourcing"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "it_infrastructure",
+        "it_security"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Спецтехника. Рынок. ЮЛ. Брокер": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Smart Logger": {
+      "capabilities": [
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Подписка СберПрайм": {
+      "capabilities": [
+        "premium_banking"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Центр управления госпитализацией пациентов с применением ИИ": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "GigaCode": {
+      "capabilities": [
+        "ai_assistant",
+        "it_outsourcing"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation",
+        "it_infrastructure"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://platformv.sbertech.ru/products/instrumenty-razrabotchika/giga-code"
+      ],
+      "web_note": "AI-ассистент разработчика."
+    },
+    "СберСпасибо – программа лояльности для бизнеса": {
+      "capabilities": [
+        "customer_loyalty_program"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring"
+      ],
+      "step_archetypes": [
+        "customer_loyalty_program"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Программа лояльности СберСпасибо для бизнеса."
+    },
+    "Активация Транспорт": {
+      "capabilities": [
+        "logistics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "logistics"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "КУ Экспертиза контракта": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "1.1 Гарантия исполнения финансовых обязательств по договору/ контракту": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "ИТуслуга.ру – Цифровая платформа ИТ-продуктов для бизнеса": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Инвестиционный кредит Москва индивидуальная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Диагностика и определение путей развития организации": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation",
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Геоконтекстная реклама": {
+      "capabilities": [
+        "advertising",
+        "audience_targeting"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "improve_ad_performance",
+        "launch_advertising"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://sbertarget.ru/"
+      ],
+      "web_note": "Геоконтекстная реклама."
+    },
+    "Цифровое техническое обследование здания": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Партнерская программа Сбера": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Образовательный консалтинг": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "22. Договорная гарантия/ гарантия качества": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Корпоративное здоровье +": {
+      "capabilities": [
+        "medical_services"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_wellness"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Кассовые операции": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "25. Кредитование с обеспечением в виде залога квартир, нежилых помещений и машиномест": {
+      "capabilities": [
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Безопасный Бизнес": {
+      "capabilities": [
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "compliance",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Пакет услуг \"Только для ИП Базовые решения\"": {
+      "capabilities": [
+        "catch_all_partner"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Операции покупки / продажи драгоценных металлов с юридическими лицами": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Кредитный потенциал ДММБ": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Гибридное обучение для школьников": {
+      "capabilities": [
+        "corporate_training",
+        "employee_training"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Депозиты": {
+      "capabilities": [
+        "business_financing",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Комплаенс-помощник": {
+      "capabilities": [
+        "compliance"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "compliance"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Помощник по комплаенсу."
+    },
+    "Залоговое страхование ЮЛ.Имущество": {
+      "capabilities": [
+        "insurance"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Защита товара": {
+      "capabilities": [
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "compliance",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Подарочные сертификаты": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "КУ Проведение семинара по ВЭД и ВК": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Listim": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "КУ Консультация": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Речевая аналитика": {
+      "capabilities": [
+        "speech_analytics",
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Анализ телефонных разговоров."
+    },
+    "Комплексная поддержка по повышению эффективности бизнеса": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "AI-платформа для автоматизации задач бизнеса": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Контрагент-профи": {
+      "capabilities": [
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "risk_management"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Проверка контрагентов."
+    },
+    "Оборотный кредит МСП индивидуальная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Услуги Интернет-эквайринга": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/bankingservice/internet-acquiring"
+      ],
+      "web_note": "Онлайн-эквайринг."
+    },
+    "SaluteJazz": {
+      "capabilities": [
+        "video_conferencing",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://developers.sber.ru/portal/products/jazz-by-sber"
+      ],
+      "web_note": "ВКС, вебинары, корпоративные коммуникации."
+    },
+    "Портал DA": {
+      "capabilities": [
+        "asset_realization",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_financing",
+        "employee_training",
+        "business_analytics"
+      ],
+      "step_archetypes": [
+        "asset_realization"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Портал продажи имущества, изъятого у заёмщиков-банкротов (уточнение пользователя)."
+    },
+    "БРИС ЖКХ": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "HR-платформа": {
+      "capabilities": [
+        "hr_operations",
+        "employee_hiring",
+        "employee_retention",
+        "payroll"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "partner_matching",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "employee_hiring",
+        "employee_retention"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://saby.ru/staff"
+      ],
+      "web_note": "Saby HRM — кадры и подбор."
+    },
+    "15. Гарантия платежа": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Валютный форвард": {
+      "capabilities": [
+        "business_financing",
+        "currency_hedging"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Визирь": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Process Mining от Сбера": {
+      "capabilities": [
+        "business_analytics",
+        "operational_efficiency"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research",
+        "operational_efficiency"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Анализ и оптимизация бизнес-процессов."
+    },
+    "Виртуальный оператор": {
+      "capabilities": [
+        "voice_robot",
+        "customer_service_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "customer_service_automation"
+      ],
+      "source": "web",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Виртуальный оператор."
+    },
+    "Дистанционный мониторинг пациентов": {
+      "capabilities": [
+        "business_analytics",
+        "medical_services"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "employee_wellness",
+        "market_research"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Индивидуальные проекты": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Информирование о событиях валютного контроля": {
+      "capabilities": [
+        "business_financing",
+        "currency_control",
+        "currency_hedging",
+        "international_payments",
+        "ved_consulting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "international_trade"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Кампус СберУниверситета": {
+      "capabilities": [
+        "corporate_training",
+        "employee_training"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Кредит на проект Стандарт индивидуальная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Кибербезопасность": {
+      "capabilities": [
+        "cloud_infrastructure",
+        "cybersecurity",
+        "it_outsourcing"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "it_infrastructure",
+        "it_security"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Voice2Med": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "КУ Подготовка расчетного документа": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Ладошки": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Переход на кадровый ЭДО": {
+      "capabilities": [
+        "electronic_document_flow",
+        "electronic_signature",
+        "employee_retention",
+        "hr_operations"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "accounting_tax",
+        "employee_hiring",
+        "employee_retention"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Агент в торгах": {
+      "capabilities": [
+        "tender_participation",
+        "tender_platform"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Sbergile и практики консалтинга": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Мониторинг эффективности региона": {
+      "capabilities": [
+        "business_analytics",
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research",
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Простой валютный опцион": {
+      "capabilities": [
+        "business_financing",
+        "currency_hedging"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Стратегический Консалтинг": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Трансграничный поиск активов": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Прием оплаты по СБП": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business"
+      ],
+      "web_note": "Приём платежей через СБП."
+    },
+    "Структурный бивалютный депозит": {
+      "capabilities": [
+        "business_financing",
+        "currency_hedging",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Рекламные услуги": {
+      "capabilities": [
+        "advertising"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "improve_ad_performance",
+        "launch_advertising"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Рекламные услуги Сбера."
+    },
+    "Структурный депозит с плавающим доходом": {
+      "capabilities": [
+        "business_financing",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Структурирование проекта для привлечения финансирования": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Комплексные консультации по вопросам поддержки бизнеса": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Валютный своп": {
+      "capabilities": [
+        "business_financing",
+        "currency_hedging"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "СберЧаевые": {
+      "capabilities": [
+        "tips_service",
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "business_financing",
+        "business_analytics",
+        "customer_loyalty_program"
+      ],
+      "step_archetypes": [
+        "staff_tips"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Сервис для оставления чаевых официантам, парикмахерам и другим сотрудникам сферы услуг (уточнение пользователя)."
+    },
+    "Вывод на рынок госзакупок": {
+      "capabilities": [
+        "marketplace_onboarding",
+        "marketplace_operations",
+        "procurement_platform",
+        "tender_participation",
+        "tender_platform"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "marketplace_operations",
+        "procurement",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Рекламная платформа": {
+      "capabilities": [
+        "advertising",
+        "audience_targeting"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "improve_ad_performance",
+        "launch_advertising"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://sbertarget.ru/"
+      ],
+      "web_note": "Рекламная платформа."
+    },
+    "BusinessApps.Мой розничный бизнес": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Обучающая программа для предпринимателей": {
+      "capabilities": [
+        "corporate_training",
+        "employee_training"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_training"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Amelia 2.0": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Пакет услуг \"Набирая обороты Базовые решения\"": {
+      "capabilities": [
+        "catch_all_partner"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Прочее. Кредит. ЮЛ. Брокер": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "СберБизнес Прайм": {
+      "capabilities": [
+        "premium_banking"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Юридическое сопровождение сотрудников": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Консалтинговые услуги по обслуживанию ВЭД и ВК. Обслуживание ВЭД \"Под ключ\"": {
+      "capabilities": [
+        "currency_control",
+        "international_payments",
+        "operational_efficiency",
+        "strategic_consulting",
+        "ved_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "international_trade",
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "СберПодбор": {
+      "capabilities": [
+        "employee_hiring"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "partner_matching",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "employee_hiring"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Сервис подбора персонала Сбера."
+    },
+    "3.2 Гарантия исполнения договорных обязательств": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "eCOM. Вывод на МП": {
+      "capabilities": [
+        "competitor_analysis",
+        "marketplace_analytics",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "ВЭД Онлайн-бизнес-миссии": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "currency_control",
+        "international_payments",
+        "partner_matching",
+        "ved_consulting"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "international_trade",
+        "partner_matching"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Инвестиционный для начинающих предпринимателей (Бизнес-старт) индивидуальная ставка": {
+      "capabilities": [
+        "business_financing",
+        "business_registration"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "business_registration"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "6. Проектное финансирование": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Зачисление выплат самозанятым": {
+      "capabilities": [
+        "self_employed_management",
+        "payroll"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_retention",
+        "self_employed_management"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Зачисление выплат самозанятым."
+    },
+    "Оборотный кредит с льготным периодом Welcome публичная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Гарантии ММБ Стандарт": {
+      "capabilities": [
+        "ai_assistant",
+        "bank_guarantee",
+        "business_automation",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "9. Кредитование СМО": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "27. Кредитование под залог Объектов коммерческой недвижимости": {
+      "capabilities": [
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "2. Гарантия исполнения платежных обязательств по договору приобретения земельного участка": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing",
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "compliance",
+        "risk_management",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Комиссия за ДБО": {
+      "capabilities": [
+        "business_banking"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "ЮKassa": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://yookassa.ru/"
+      ],
+      "web_note": "Платёжный сервис для бизнеса."
+    },
+    "Лизинг": {
+      "capabilities": [
+        "leasing_financing",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberleasing.ru/"
+      ],
+      "web_note": "Финансовая аренда техники и оборудования."
+    },
+    "Процентный своп": {
+      "capabilities": [
+        "business_financing",
+        "currency_hedging"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Премиальная бизнес-карта": {
+      "capabilities": [
+        "premium_banking"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Выпущенные векселя": {
+      "capabilities": [
+        "business_financing",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Валютный контроль": {
+      "capabilities": [
+        "business_financing",
+        "currency_control",
+        "currency_hedging",
+        "international_payments",
+        "ved_consulting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "international_trade"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "23. Финансирование строительства объектов коммерческой недвижимости": {
+      "capabilities": [
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "SberPay QR": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business"
+      ],
+      "web_note": "QR-платежи СберPay."
+    },
+    "Нестор.ПРАВОСУДИЕ": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Интернет-эквайринг": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/bankingservice/internet-acquiring"
+      ],
+      "web_note": "Приём онлайн-платежей."
+    },
+    "Taxfree": {
+      "capabilities": [
+        "tax_refund_service",
+        "retail_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "business_financing",
+        "business_analytics",
+        "customer_loyalty_program"
+      ],
+      "step_archetypes": [
+        "tax_free_operations"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Возврат НДС иностранным покупателям (tax free)."
+    },
+    "Покупка смарт-терминала": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "СберБизнес для селлеров": {
+      "capabilities": [
+        "competitor_analysis",
+        "marketplace_analytics",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Оплата в кредит": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Реализация активов внешних партнеров": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Риск блокировки": {
+      "capabilities": [
+        "compliance",
+        "counterparty_check",
+        "risk_management"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "compliance",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Рынок долгов": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Инвестиционный кредит МСХ индивидуальная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Пакет услуг «Новые рынки»": {
+      "capabilities": [
+        "catch_all_partner"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Телемедицина": {
+      "capabilities": [
+        "medical_services"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_wellness"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Единая цифровая среда для эффективности бизнеса": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Юридическое сопровождение в банкротстве и взыскании за рубежом": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "currency_control",
+        "international_payments",
+        "legal_support",
+        "ved_consulting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "international_trade",
+        "legal_support"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Финансовая диагностика бизнеса": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Бухгалтерия, зарплата и кадры": {
+      "capabilities": [
+        "accounting",
+        "employee_retention",
+        "hr_operations",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax",
+        "employee_hiring",
+        "employee_retention"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Оборотный кредит Москва индивидуальная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Зелёные сертификаты": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Инвестиционный кредит Беларусь индивидуальная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "ДМС ЮЛ Рынок. ЮЛ. Брокер": {
+      "capabilities": [
+        "insurance",
+        "medical_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "business_financing",
+        "customer_loyalty_program",
+        "business_analytics"
+      ],
+      "step_archetypes": [
+        "corporate_health_insurance",
+        "employee_wellness"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Корпоративное добровольное медицинское страхование для сотрудников (ДМС)."
+    },
+    "Деловой туризм": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "ИИ-решения для бизнеса": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Защита сотрудников": {
+      "capabilities": [
+        "employee_retention",
+        "hr_operations",
+        "insurance"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "employee_hiring",
+        "employee_retention",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Консалтинг в недвижимости": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "construction_supervision",
+        "operational_efficiency",
+        "real_estate_services",
+        "strategic_consulting"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "construction_management",
+        "operational_efficiency",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "49. Индивидуальный овердрафт": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "СберБизнес. Мой розничный бизнес": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Личная защита": {
+      "capabilities": [
+        "insurance"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "10. Оборотный кредит": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Умные дома от Doma.ai": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сервис возмещения из бюджета НДС и акцизов": {
+      "capabilities": [
+        "accounting",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "ОСАГО. Рынок. ЮЛ. Брокер": {
+      "capabilities": [
+        "insurance",
+        "logistics"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "logistics",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "VS Robotics: голосовой робот и речевая аналитика для бизнеса": {
+      "capabilities": [
+        "voice_robot",
+        "speech_analytics",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "business_automation",
+        "customer_service_automation"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Голосовой робот и речевая аналитика."
+    },
+    "Сбереги здоровье": {
+      "capabilities": [
+        "medical_services"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "employee_wellness"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Электронная торговая площадка Сбер А": {
+      "capabilities": [
+        "tender_participation",
+        "tender_platform"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Предоплата / отложенная оплата физических поставок товарно-сырьевых активов": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Гарантии АСТ": {
+      "capabilities": [
+        "ai_assistant",
+        "bank_guarantee",
+        "business_automation",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сбербанк Премьер": {
+      "capabilities": [
+        "premium_banking"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Аккредитивы выданные с покрытием за счёт кредитных ресурсов Банка - внутрироссийские": {
+      "capabilities": [
+        "business_financing",
+        "international_payments"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "international_trade"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Аккредитивы выданные непокрытые - внутрироссийские": {
+      "capabilities": [
+        "business_financing",
+        "international_payments"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "international_trade"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Комплексная эксплуатация недвижимости": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "БС контрактов/проектов по договору с корпоративным клиентом": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Защита 360": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Технологическая связь М2М": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Монитор города": {
+      "capabilities": [
+        "business_analytics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_analytics",
+        "competitor_research",
+        "market_research"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Отраслевое решение Транспорт": {
+      "capabilities": [
+        "logistics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "logistics"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Моя бухгалтерия Онлайн": {
+      "capabilities": [
+        "accounting",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Онлайн-бухгалтерия."
+    },
+    "КАСКО. Рынок. ЮЛ. Брокер": {
+      "capabilities": [
+        "insurance",
+        "logistics"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "logistics",
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Спорт рядом": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Экспертиза по HoReCa": {
+      "capabilities": [
+        "operational_efficiency",
+        "restaurant_automation",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency",
+        "restaurant_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Спецтехника. Залог. ЮЛ. Брокер": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Бизнес-карта": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Прочее. Залог. ЮЛ. Брокер": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "Аренда POS-терминалов": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "ОСАГО ЮЛ": {
+      "capabilities": [
+        "insurance"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Городское парковочное пространство": {
+      "capabilities": [
+        "business_banking"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_banking"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Электронный документооборот": {
+      "capabilities": [
+        "electronic_document_flow"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "ЭДО и отчётность."
+    },
+    "Пакет услуг \"Двойной Полным ходом\"": {
+      "capabilities": [
+        "catch_all_partner"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Пакет услуг \"Двойной Набирая обороты\"": {
+      "capabilities": [
+        "catch_all_partner"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Ассистент преподавателя": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "eCOM. Вывод на СММ": {
+      "capabilities": [
+        "advertising",
+        "audience_targeting",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "improve_ad_performance",
+        "launch_advertising",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Опцион на процентную ставку при онлайн кредитовании": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing",
+        "currency_hedging"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "52. Контрактное кредитование Подрядчиков": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Doma.ai": {
+      "capabilities": [
+        "real_estate_services",
+        "construction_digital"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://doma.ai/"
+      ],
+      "web_note": "Платформа ЖКХ и недвижимости."
+    },
+    "Транспортный ЭДО": {
+      "capabilities": [
+        "electronic_document_flow",
+        "electronic_signature",
+        "logistics"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "accounting_tax",
+        "logistics"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "HR-сервисы": {
+      "capabilities": [
+        "hr_operations",
+        "employee_hiring",
+        "employee_retention",
+        "payroll"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "payment_acceptance",
+        "business_financing",
+        "customer_loyalty_program",
+        "business_analytics",
+        "tax_free_operations"
+      ],
+      "step_archetypes": [
+        "employee_hiring",
+        "employee_retention"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Комплекс HR-услуг: кадры, подбор, удержание, зарплата."
+    },
+    "SBERUNITY": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "eCOM. Вывод на WB": {
+      "capabilities": [
+        "competitor_analysis",
+        "marketplace_analytics",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Звук Бизнес": {
+      "capabilities": [
+        "background_music",
+        "retail_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "business_financing",
+        "business_analytics",
+        "customer_loyalty_program"
+      ],
+      "step_archetypes": [
+        "background_music"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Корпоративная/фоновая музыка для бизнеса (офис, ритейл)."
+    },
+    "5. Инвестиционное кредитование": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Бухгалтерия для ИП": {
+      "capabilities": [
+        "accounting",
+        "tax_reporting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Бухгалтерия для ИП."
+    },
+    "Пакет услуг \"Полным ходом Базовые решения\"": {
+      "capabilities": [
+        "catch_all_partner"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Базовая версия решения Недвижимость": {
+      "capabilities": [
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "customer_loyalty_program",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Электронные собрания кредиторов": {
+      "capabilities": [
+        "business_financing",
+        "legal_support"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "legal_support"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Оборотный кредит Стандарт публичная ставка": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Выписки по расписанию": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "51. Контрактное кредитование Контрактников и Исполнителей Контрактов": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "eCOM. Вывод на ЯМ": {
+      "capabilities": [
+        "competitor_analysis",
+        "marketplace_analytics",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Сделано в России": {
+      "capabilities": [
+        "advertising",
+        "ai_assistant",
+        "audience_targeting",
+        "business_automation"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "improve_ad_performance",
+        "launch_advertising"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Оборотный кредит с льготным периодом Welcome публичная ставка (свыше 6 месяцев)": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Имущество. Рынок. ЮЛ. Брокер": {
+      "capabilities": [
+        "insurance"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "risk_management"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Цифровой консалтинг": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Архитектурный консалтинг в ИТ": {
+      "capabilities": [
+        "operational_efficiency",
+        "strategic_consulting"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "operational_efficiency"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "eCOM. Вывод на OZON": {
+      "capabilities": [
+        "competitor_analysis",
+        "marketplace_analytics",
+        "marketplace_onboarding",
+        "marketplace_operations"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "АСТ ГОЗ: Электронная площадка для закрытых торгов": {
+      "capabilities": [
+        "tender_participation",
+        "tender_platform"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "tender_participation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Опция \"Самоинкассация\"": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation",
+        "cash_collection",
+        "self_collection"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation",
+        "cash_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Оборотный кредит под залог недвижимости/векселя Стандарт индивидуальная ставка": {
+      "capabilities": [
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services",
+        "securities",
+        "treasury"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "construction_management",
+        "real_estate",
+        "treasury"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Аренда смарт-терминала": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Переводы с участием счетов в другой банк": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "50. Овердрафт с общим лимитом": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Юрист для бизнеса": {
+      "capabilities": [
+        "legal_support"
+      ],
+      "not_for": [
+        "competitor_research",
+        "launch_advertising",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "legal_support"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Юридические консультации для МСБ."
+    },
+    "Активация Сфера услуг": {
+      "capabilities": [
+        "catch_all_partner"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Смарт-POS 2в1": {
+      "capabilities": [
+        "payment_acceptance"
+      ],
+      "not_for": [
+        "business_financing",
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "payment_acceptance"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Инвестиционное структурирование концессионных проектов": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Факторинг БезРегресс": {
+      "capabilities": [
+        "business_financing",
+        "factoring"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Финансовое сопровождение бизнеса": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Мобильный кассир": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Продажа имущества компании": {
+      "capabilities": [
+        "ai_assistant",
+        "business_automation"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Электронная подпись": {
+      "capabilities": [
+        "electronic_signature"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "accounting_tax"
+      ],
+      "source": "web+catalog",
+      "web_status": "found",
+      "web_refs": [
+        "https://www.sberbank.ru/ru/s_m_business/nbs"
+      ],
+      "web_note": "Электронная подпись для бизнеса."
+    },
+    "Пакет услуг \"Только для селлеров\"": {
+      "capabilities": [
+        "competitor_analysis",
+        "marketplace_analytics"
+      ],
+      "not_for": [
+        "employee_hiring",
+        "launch_advertising",
+        "legal_support",
+        "payment_acceptance"
+      ],
+      "step_archetypes": [
+        "competitor_research",
+        "market_research",
+        "marketplace_operations"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Подключение ретейлеров": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Кредиты юридическим лицам: Факторинг": {
+      "capabilities": [
+        "business_financing",
+        "factoring"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Все остальные гарантии, кредиты, опции и пакеты": {
+      "capabilities": [
+        "catch_all_banking",
+        "business_financing",
+        "bank_guarantee"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Агрегат стандартных банковских продуктов: кредиты, гарантии, опции (только финансирование/обеспечение)."
+    },
+    "Все остальные партнёрские сервисы и активации": {
+      "capabilities": [
+        "catch_all_partner",
+        "business_automation"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "employee_hiring",
+        "payment_acceptance",
+        "business_financing",
+        "launch_advertising",
+        "improve_ad_performance",
+        "customer_loyalty_program",
+        "corporate_health_insurance",
+        "tax_free_operations",
+        "staff_tips",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_automation",
+        "custom_solutions"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Агрегат партнёрских цифровых сервисов и активаций (только автоматизация/цифровизация)."
+    },
+    "Все остальные «Индивидуальные проекты» и «Прочее»": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Не предлагать к шагам Agent2 (решение пользователя).",
+      "excluded": true
+    },
+    "21. Договорная гарантия/ гарантия качества. Альбом №593 для Принципала с непроектным риск-профилем ОК": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "11. Финансовый кредит. Альбом №931-р": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "Пакет услуг \"Только для ИП\"": {
+      "capabilities": [
+        "catch_all_partner"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "business_automation"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "1.2 Гарантия исполнения финансовых обязательств по договору/ контракту (гарантия платежа). Альбом №1593-р, Альбом №2559, Альбом №593-р": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "16. Гарантия возврата займа на оборотные цели за счет текущей деятельности. Альбом №593 для Принципала с непроектным риск-профилем": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "25. Налоговая гарантия возмещения НДС (заявительный порядок). Альбом №593-р, Альбом №1593-р ОК": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "38. Основное финансирование в рамках Продукта \"2 в 1\". ОРД": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "39.3. Кредит под будущую прибыль в рамках Продукта по финансированию проектов строительства Объектов жилой недвижимости «3 в 1». Альбом №5738": {
+      "capabilities": [
+        "business_financing",
+        "developer_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "17. Гарантия возврата займа на оборотные цели за счет текущей деятельности. Альбом №593 для Принципала с проектным риск-профилем или СКМ, Альбом №2559": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "53. Финансирование текущей деятельности Контрактников и Подрядчиков (Котловое финансирование). Альбом №2559": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "24. Финансирование проектов жилищного строит-ва при осуществлении расчетов по договорам участия в долевом строит-ве с исп. счетов эскроу. Альбом №5738": {
+      "capabilities": [
+        "business_financing",
+        "developer_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "3.1 Гарантия исполнения договорных обязательств по договору/ контракту (договорная гарантия/ гарантия качества). Альбом №593-р для Принципала с непроектным риск-профилем": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "21. Договорная гарантия/ гарантия качества. Альбом №593 для Принципала с непроектным риск-профиля": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "26. Налоговая гарантия возмещения налога по ст.203 НК РФ (заявительный порядок). Альбом №593-р, Альбом №1593-р ОК": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "14. Гарантия платежа непроектного Принципала. Альбом №593-р ОК": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "1.1 Гарантия исполнения финансовых обязательств по договору/ контракту (гарантия платежа) Альбом №593-р": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "25. Налоговая гарантия возмещения НДС (заявительный порядок). Альбом №593-р, Альбом №1593": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "22. Договорная гарантия/ гарантия качества . Альбом №593 для Принципала с проектным риск-профилем, Альбом №1593, Альбом №2559 \"": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "25. Кредитование с обеспечением в виде залога квартир, нежилых помещений и машиномест в объектах жилой недвижимости, введенных в эксп-ю. Альбом №5738": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "15. Гарантия платежа. Альбом №593 для проектного Принципала или СКМ, Альбом №2559": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "3.2 Гарантия исполнения договорных обязательств по договору/ контракту (договорная гарантия/ гарантия качества). Альбом №593-р для Принципала с проектным риск-профилем": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "6. Проектное финансирование Альбом №479-р, Альбом №2559, ОРД": {
+      "capabilities": [
+        "business_financing",
+        "developer_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "2. Гарантия исполнения платежных обязательств по договору приобретения земельного участка под строительство Объекта жилой недвижимости. Альбом №5738": {
+      "capabilities": [
+        "bank_guarantee",
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "tender_participation"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "Валютный контроль (ВК)": {
+      "capabilities": [
+        "business_financing",
+        "currency_control",
+        "currency_hedging",
+        "international_payments",
+        "ved_consulting"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "international_trade"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "23. Финансирование строительства объектов коммерческой недвижимости. ОРД": {
+      "capabilities": [
+        "business_financing",
+        "construction_supervision",
+        "real_estate_services"
+      ],
+      "not_for": [
+        "competitor_research",
+        "customer_loyalty_program",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing",
+        "construction_management",
+        "real_estate"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "49. Индивидуальный овердрафт. Альбом №2667 ОК": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "10. Оборотный кредит. Альбом №931-р, ОРД": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "Предоплата / отложенная оплата физических поставок товарно-сырьевых активов (flash-title)": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "employee_hiring",
+        "launch_advertising"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "БС контрактов/проектов по договору (соглашению) с корпоративным клиентом": {
+      "capabilities": [
+        "custom_projects"
+      ],
+      "not_for": [],
+      "step_archetypes": [
+        "custom_solutions"
+      ],
+      "source": "catalog",
+      "web_status": "catalog_inferred"
+    },
+    "Электронный документооборот (Сервисы «Документооборот» и «Отчетность»)": {
+      "capabilities": [],
+      "not_for": [],
+      "step_archetypes": [],
+      "source": "manual_excluded",
+      "web_status": "excluded",
+      "web_note": "Дубликат базового «Электронный документооборот»; исключить из матчинга (решение пользователя).",
+      "excluded": true
+    },
+    "24. Финансирование проектов жилищного строит-ва при осущес-и расчетов по договорам участия в долевом строит-ве с исп счетов эскроу. Альбом №5738 ОК": {
+      "capabilities": [
+        "business_financing",
+        "developer_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "5. Инвестиционное кредитование. Альбом №479-р, Альбом №2559, ОРД": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    },
+    "10. Оборотный кредит. Альбом №931-р, ОРД ОК": {
+      "capabilities": [
+        "business_financing"
+      ],
+      "not_for": [
+        "competitor_research",
+        "market_research",
+        "launch_advertising",
+        "improve_ad_performance",
+        "employee_hiring",
+        "payment_acceptance",
+        "customer_loyalty_program",
+        "business_analytics",
+        "staff_tips",
+        "tax_free_operations",
+        "background_music",
+        "asset_realization"
+      ],
+      "step_archetypes": [
+        "business_financing"
+      ],
+      "source": "manual",
+      "web_status": "manual",
+      "web_note": "Внутренний банковский продукт (Альбом): финансирование/гарантия."
+    }
+  },
+  "stats": {
+    "total": 374,
+    "web_found": 64,
+    "catalog_inferred": 272,
+    "not_found_online": 0,
+    "manual_overrides": 35,
+    "manual_excluded": 20
+  }
+}

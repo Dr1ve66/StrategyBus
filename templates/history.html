@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+<div class="page-header d-flex justify-content-between align-items-center gap-3">
   <div>
-    <h1 class="h2 fw-bold">История</h1>
-    <p class="text-muted mb-0">Все запросы текущего пользователя.</p>
+    <div class="eyebrow mb-2">Рабочая область</div>
+    <h1 class="h2 page-title">История запросов</h1>
+    <p class="page-subtitle mb-0">Все сохранённые сценарии текущего пользователя.</p>
   </div>
-  <a class="btn btn-primary" href="{{ url_for('index') }}">➕ Новый запрос</a>
+  <a class="btn btn-primary" href="{{ url_for('index') }}">Новый запрос</a>
 </div>
 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
   <div class="table-responsive">
@@ -27,11 +28,11 @@
           <td>{{ row.input.input_text[:60] }}{% if row.input.input_text|length > 60 %}...{% endif %}</td>
           <td>{{ row.rounds_a }}</td>
           <td>{{ row.rounds_b }}</td>
-          <td>{% if row.completed %}<span class="badge text-bg-success">completed</span>{% else %}<span class="badge text-bg-secondary">in_progress</span>{% endif %}</td>
+          <td>{% if row.completed %}<span class="badge text-bg-success">Завершён</span>{% else %}<span class="badge text-bg-secondary">В работе</span>{% endif %}</td>
           <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ row.open_url }}">Открыть</a></td>
         </tr>
         {% else %}
-        <tr><td colspan="6" class="text-center text-muted py-5">История пока пуста</td></tr>
+        <tr><td colspan="6" class="text-center text-muted py-5">История пока пуста. Создайте первый запрос.</td></tr>
         {% endfor %}
       </tbody>
     </table>

@@ -70,6 +70,12 @@ Thumbs.db
 *.sqlite3
 data/
 instance/
+!data/
+data/*
+!data/products.txt
+!data/signals.tsv
+!data/product_metadata.json
+!data/product_metadata_manual.json
 
 # Python
 __pycache__/

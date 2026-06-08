@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-body p-4 p-lg-5">
+        <div class="mb-4">
+          <div class="eyebrow mb-2">Проверка описания</div>
+          <h1 class="h2 page-title mb-2">Уточните ситуацию компании</h1>
+          <p class="page-subtitle mb-0">
+            {% if clarify_mode == "focus" %}
+              В описании несколько проблем — выберите одну главную. Мы предложим одну стратегию.
+            {% elif slot_questions %}
+              Не хватает одной критичной детали. Остальное мы уже поняли из текста.
+            {% else %}
+              Сейчас описание не проходит методологию. Сфокусируйтесь на одной проблеме.
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="alert alert-warning rounded-4">
+          <div class="fw-semibold mb-1">Что нужно уточнить</div>
+          <div>{{ situation_check.reason or "Описание недостаточно конкретное." }}</div>
+          {% if situation_check.rewrite_hint %}
+          <div class="mt-2">{{ situation_check.rewrite_hint }}</div>
+          {% endif %}
+        </div>
+
+        {% if missing and clarify_mode != "focus" %}
+        <div class="mb-4">
+          <div class="small text-muted mb-2">Не хватает в описании:</div>
+          <div class="d-flex flex-wrap gap-2">
+            {% for item in missing %}
+              {% if item != "focus" %}
+              <span class="badge text-bg-light border">
+                {% if item == "problem" %}конкретная проблема
+                {% elif item == "context" %}где проявляется
+                {% elif item == "goal" %}цель
+                {% elif item == "scale" %}масштаб
+                {% elif item == "cause" %}причина
+                {% elif item == "constraints" %}ограничения
+                {% else %}{{ item }}{% endif %}
+              </span>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <form method="post" data-ai-form
+              data-ai-title="Проверяем описание"
+              data-ai-subtitle="Сверяем текст с методологией…">
+
+          {% if clarify_mode == "focus" and focus_question %}
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Ваше описание</label>
+            <div class="situation-slot-original rounded-4 p-3 mb-4">{{ situation_text }}</div>
+          </div>
+
+          <fieldset class="situation-slot-fieldset mb-4">
+            <legend class="form-label fw-semibold mb-2">{{ focus_question.message }}</legend>
+            <div class="d-flex flex-column gap-2">
+              {% for option in focus_question.options %}
+              <div class="form-check situation-slot-option">
+                <input
+                  class="form-check-input focus-option-radio"
+                  type="radio"
+                  name="focus_problem"
+                  id="focus_problem_{{ loop.index }}"
+                  value="{{ option }}"
+                  {% if loop.first %}required{% endif %}
+                >
+                <label class="form-check-label" for="focus_problem_{{ loop.index }}">
+                  {{ option }}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="situation-slot-custom mt-3 d-none" id="focus_problem_custom_wrap">
+              <label class="form-label small text-muted" for="focus_problem_custom">
+                Свой вариант
+              </label>
+              <textarea
+                class="form-control"
+                id="focus_problem_custom"
+                name="focus_problem_custom"
+                rows="2"
+                placeholder="Опишите главную проблему одной фразой"
+              ></textarea>
+            </div>
+          </fieldset>
+
+          {% elif slot_questions %}
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Ваше описание</label>
+            <div class="situation-slot-original rounded-4 p-3 mb-4">{{ situation_text }}</div>
+          </div>
+
+          {% for slot_key, slot_data in slot_questions.items() %}
+          <fieldset class="situation-slot-fieldset mb-4">
+            <legend class="form-label fw-semibold mb-2">{{ slot_data.message }}</legend>
+            <div class="d-flex flex-column gap-2">
+              {% for option in slot_data.options %}
+              <div class="form-check situation-slot-option">
+                <input
+                  class="form-check-input slot-option-radio"
+                  type="radio"
+                  name="slot_{{ slot_key }}"
+                  id="slot_{{ slot_key }}_{{ loop.index }}"
+                  value="{{ option }}"
+                  data-slot="{{ slot_key }}"
+                  {% if loop.first %}required{% endif %}
+                >
+                <label class="form-check-label" for="slot_{{ slot_key }}_{{ loop.index }}">
+                  {{ option }}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="situation-slot-custom mt-3 d-none" id="slot_{{ slot_key }}_custom_wrap">
+              <label class="form-label small text-muted" for="slot_{{ slot_key }}_custom">
+                Свой вариант
+              </label>
+              <textarea
+                class="form-control"
+                id="slot_{{ slot_key }}_custom"
+                name="slot_{{ slot_key }}_custom"
+                rows="2"
+                placeholder="Опишите своими словами"
+              ></textarea>
+            </div>
+          </fieldset>
+          {% endfor %}
+
+          {% else %}
+
+          {% if situation_check.example %}
+          <div class="card bg-light border-0 rounded-4 mb-4">
+            <div class="card-body">
+              <div class="small text-muted mb-1">Пример хорошего описания</div>
+              <div style="white-space: pre-line;">{{ situation_check.example }}</div>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="situation_description">
+              Описание ситуации у компании
+            </label>
+            <textarea
+              id="situation_description"
+              class="form-control input-textarea"
+              name="situation_description"
+              rows="10"
+              required
+              autofocus
+              maxlength="{{ situation_hard_length }}"
+              placeholder="Одна ситуация: что происходит, где проявляется, чего хотите добиться"
+            >{{ situation_text }}</textarea>
+            <div class="form-text d-flex justify-content-between gap-3">
+              <span>Опишите одну главную проблему — так стратегия будет точнее.</span>
+              <span id="situation-char-counter" class="text-muted text-nowrap"></span>
+            </div>
+          </div>
+
+          {% endif %}
+
+          <div class="d-flex justify-content-end mt-4">
+            <button class="btn btn-primary btn-lg" type="submit">
+              Проверить и продолжить
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if slot_questions %}
+<script>
+(function () {
+  function toggleCustom(slotKey) {
+    var wrap = document.getElementById("slot_" + slotKey + "_custom_wrap");
+    if (!wrap) return;
+    var selected = document.querySelector('input[name="slot_' + slotKey + '"]:checked');
+    var isOther = selected && selected.value.indexOf("Другое") === 0;
+    wrap.classList.toggle("d-none", !isOther);
+    var textarea = wrap.querySelector("textarea");
+    if (textarea) textarea.required = !!isOther;
+  }
+  document.querySelectorAll(".slot-option-radio").forEach(function (input) {
+    input.addEventListener("change", function () {
+      toggleCustom(input.getAttribute("data-slot"));
+    });
+  });
+  Object.keys({{ slot_questions | tojson }}).forEach(toggleCustom);
+})();
+</script>
+{% endif %}
+
+{% if clarify_mode == "focus" %}
+<script>
+(function () {
+  function toggleFocusCustom() {
+    var wrap = document.getElementById("focus_problem_custom_wrap");
+    if (!wrap) return;
+    var selected = document.querySelector('input[name="focus_problem"]:checked');
+    var isOther = selected && selected.value.indexOf("Другое") === 0;
+    wrap.classList.toggle("d-none", !isOther);
+    var textarea = wrap.querySelector("textarea");
+    if (textarea) textarea.required = !!isOther;
+  }
+  document.querySelectorAll(".focus-option-radio").forEach(function (input) {
+    input.addEventListener("change", toggleFocusCustom);
+  });
+  toggleFocusCustom();
+})();
+</script>
+{% endif %}
+
+{% if not slot_questions and clarify_mode != "focus" %}
+<script>
+(function () {
+  var textarea = document.getElementById("situation_description");
+  var counter = document.getElementById("situation-char-counter");
+  if (!textarea || !counter) return;
+  var soft = {{ situation_soft_length }};
+  var hard = {{ situation_hard_length }};
+  function render() {
+    var len = textarea.value.length;
+    counter.textContent = len + " / " + hard;
+    counter.classList.toggle("text-warning", len > soft && len <= hard);
+    counter.classList.toggle("text-danger", len > hard);
+  }
+  textarea.addEventListener("input", render);
+  render();
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -3,33 +3,30 @@
 {% block content %}
 <div class="container" style="max-width: 700px;">
 
-    <h1 style="margin-bottom: 8px;">Уточняющие вопросы</h1>
-    <p style="color:#6b7280; margin-bottom: 24px;">
+    <div class="eyebrow mb-2">Проверка контекста</div>
+    <h1 class="h2 page-title mb-2">Уточняющие вопросы</h1>
+    <p class="page-subtitle mb-4">
         Ответьте на несколько вопросов — это поможет сформировать более точные рекомендации
     </p>
 
     <form method="POST" data-ai-form
-          data-ai-title="🧠 Рождается стратегия"
-          data-ai-subtitle="20 лет опыта в действии — подождите секунду…">
+          data-ai-title="Формируем стратегию"
+          data-ai-subtitle="Проверяем ответы и готовим рекомендации…">
 
         {% for q in questions %}
-            <div class="question-card" style="
-                background: #ffffff;
-                padding: 16px;
-                border-radius: 12px;
-                margin-bottom: 16px;
-                border: 1px solid #e5e7eb;
-            ">
+            <div class="card question-card mb-3">
+              <div class="card-body p-4">
 
-                <div class="question-title" style="
-                    font-weight: 600;
-                    margin-bottom: 10px;
-                ">
+                <div class="question-title" style="font-weight: 600; margin-bottom: 10px;">
                     {{ loop.index }}. {{ q.question }}
+                    {% if q.explanation %}
+                        <span class="info-tooltip">&#8505;&#65039;
+                            <span class="tooltip-text">{{ q.explanation }}</span>
+                        </span>
+                    {% endif %}
                 </div>
 
-                <select name="{{ q.key }}" class="select" required
-                        style="width:100%; padding:10px; border-radius:8px; border:1px solid #d1d5db;"
+                <select name="{{ q.key }}" class="form-select" required
                         onchange="toggleCustomInput(this, '{{ q.key }}')">
 
                     <option value="" disabled selected>Выберите вариант</option>
@@ -43,27 +40,16 @@
 
                 <input type="text"
                        name="{{ q.key }}_custom"
-                       class="custom-input"
+                       class="form-control custom-input mt-2"
                        placeholder="Введите свой вариант"
-                       style="
-                           display:none;
-                           margin-top:10px;
-                           width:100%;
-                           padding:10px;
-                           border-radius:8px;
-                           border:1px solid #d1d5db;
-                       ">
+                       style="display:none;">
 
+              </div>
             </div>
         {% endfor %}
 
-        <div class="actions" style="margin-top: 24px;">
-            <button type="submit" class="btn-primary" style="
-                width:100%;
-                padding:12px;
-                border-radius:10px;
-                font-weight:600;
-            ">
+        <div class="actions mt-4">
+            <button type="submit" class="btn btn-primary btn-lg w-100">
                 Продолжить
             </button>
         </div>
@@ -86,4 +72,40 @@ function toggleCustomInput(select, key) {
     }
 }
 </script>
+
+<style>
+.info-tooltip {
+    display: inline-block;
+    position: relative;
+    cursor: help;
+    color: #6b7280;
+    margin-left: 4px;
+    font-size: 16px;
+    vertical-align: middle;
+}
+.info-tooltip .tooltip-text {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    width: 320px;
+    max-width: 90vw;
+    white-space: normal;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    text-align: left;
+}
+.info-tooltip:hover .tooltip-text {
+    display: block;
+}
+</style>
+
 {% endblock %}
