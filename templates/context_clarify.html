@@ -33,6 +33,11 @@
         <form method="post" data-ai-form
               data-ai-title="Проверяем контекст"
               data-ai-subtitle="После этого продолжим анализ ситуации клиента…">
+
+          {% if industry_check %}
+          <input type="hidden" name="industry_mode" id="industryModeInput" value="specify">
+          {% endif %}
+
           <div class="mb-4">
             <label class="form-label fw-semibold" for="company_size">
               Сегмент клиента
@@ -65,37 +70,33 @@
 
           {% if industry_check %}
           <div class="mb-4">
-            <label class="form-label fw-semibold">
+            <label class="form-label fw-semibold" for="industry_answer">
               {{ industry_check.question or "Опишите отраслевую специфику компании." }}
             </label>
-            <div class="mb-3">
-              <div class="form-check form-check-inline">
-                <input class="form-check-input industry-toggle" type="radio" name="industry_mode" id="industry_mode_specify" value="specify" checked>
-                <label class="form-check-label" for="industry_mode_specify">Указать отрасль</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input industry-toggle" type="radio" name="industry_mode" id="industry_mode_skip" value="skip">
-                <label class="form-check-label" for="industry_mode_skip">Пропустить (не указывать отрасль)</label>
-              </div>
-            </div>
-            <div id="industry_answer_block">
-              <textarea
-                id="industry_answer"
-                class="form-control"
-                name="industry_answer"
-                rows="5"
-                placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
-              >{{ industry_check.answer or fields.company_industry }}</textarea>
-            </div>
+            <textarea
+              id="industry_answer"
+              class="form-control"
+              name="industry_answer"
+              rows="5"
+              placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
+            >{{ industry_check.answer or fields.company_industry }}</textarea>
             <div class="form-text">
-              Отрасль уточняем только когда она важна для качества ответа.
+              Отрасль уточняем только когда она важна для качества ответа. Если не знаете — пропустите.
             </div>
           </div>
           {% endif %}
 
-          <div class="d-flex justify-content-end mt-4">
-            <button class="btn btn-primary btn-lg" type="submit">
-              Продолжить
+          <div class="d-flex justify-content-between align-items-center mt-4">
+            {% if industry_check %}
+            <button type="button" id="skipIndustryBtn"
+                    class="btn btn-outline-secondary btn-lg">
+              Пропустить отрасль
+            </button>
+            {% else %}
+            <div></div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary btn-lg">
+              Продолжить →
             </button>
           </div>
         </form>
@@ -104,29 +105,22 @@
   </div>
 </div>
 
+{% if industry_check %}
 <script>
-(function() {
-  const toggles = document.querySelectorAll('.industry-toggle');
-  const answerBlock = document.getElementById('industry_answer_block');
-  const answerField = document.getElementById('industry_answer');
-
-  function updateIndustryMode() {
-    const mode = document.querySelector('input[name="industry_mode"]:checked');
-    if (mode && mode.value === 'skip') {
-      answerBlock.style.display = 'none';
-      answerField.removeAttribute('required');
-    } else {
-      answerBlock.style.display = '';
-      answerField.setAttribute('required', 'required');
+(function () {
+  var skipBtn = document.getElementById('skipIndustryBtn');
+  if (!skipBtn) return;
+  skipBtn.addEventListener('click', function () {
+    var sizeSelect = document.getElementById('company_size');
+    if (sizeSelect && !sizeSelect.value) {
+      sizeSelect.reportValidity();
+      return;
     }
-  }
-
-  toggles.forEach(function(el) {
-    el.addEventListener('change', updateIndustryMode);
+    var modeInput = document.getElementById('industryModeInput');
+    if (modeInput) modeInput.value = 'skip';
+    skipBtn.closest('form').requestSubmit();
   });
-
-  // initial state
-  updateIndustryMode();
 })();
 </script>
+{% endif %}
 {% endblock %}

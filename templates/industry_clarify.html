@@ -7,9 +7,9 @@
       <div class="card-body p-4 p-lg-5">
         <div class="mb-4">
           <div class="eyebrow mb-2">Проверка отрасли</div>
-          <h1 class="h2 page-title mb-2">Нужно уточнить отраслевую специфику</h1>
+          <h1 class="h2 page-title mb-2">Уточните отраслевую специфику</h1>
           <p class="page-subtitle mb-0">
-            Это уточнение обязательно: без него стратегия может получиться слишком общей.
+            Уточнение поможет сделать стратегию точнее. Если отрасль не важна для этой ситуации — пропустите шаг.
           </p>
         </div>
 
@@ -23,37 +23,30 @@
               data-ai-title="Проверяем уточнение"
               data-ai-subtitle="После этого продолжим анализ ситуации клиента…">
           <div class="mb-3">
-            <label class="form-label fw-semibold">
+            <label class="form-label fw-semibold" for="industry_answer">
               {{ industry_check.question or "Опишите отраслевую специфику компании." }}
             </label>
-            <div class="mb-3">
-              <div class="form-check form-check-inline">
-                <input class="form-check-input industry-toggle" type="radio" name="industry_mode" id="industry_mode_specify" value="specify" checked>
-                <label class="form-check-label" for="industry_mode_specify">Указать отрасль</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input industry-toggle" type="radio" name="industry_mode" id="industry_mode_skip" value="skip">
-                <label class="form-check-label" for="industry_mode_skip">Пропустить (не указывать отрасль)</label>
-              </div>
-            </div>
-            <div id="industry_answer_block">
-              <textarea
-                id="industry_answer"
-                class="form-control"
-                name="industry_answer"
-                rows="5"
-                autofocus
-                placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
-              ></textarea>
-            </div>
+            <textarea
+              id="industry_answer"
+              class="form-control"
+              name="industry_answer"
+              rows="5"
+              autofocus
+              placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
+            ></textarea>
             <div class="form-text">
-              Напишите своими словами. Важно указать, чем именно занимается компания и что в этой сфере влияет на проблему.
+              Напишите своими словами — чем занимается компания и что в этой сфере влияет на проблему.
             </div>
           </div>
 
-          <div class="d-flex justify-content-end mt-4">
-            <button class="btn btn-primary btn-lg" type="submit">
-              Продолжить
+          <div class="d-flex justify-content-between align-items-center mt-4">
+            <button type="submit" name="industry_mode" value="skip"
+                    class="btn btn-outline-secondary btn-lg" formnovalidate>
+              Пропустить этап
+            </button>
+            <button type="submit" name="industry_mode" value="specify"
+                    class="btn btn-primary btn-lg">
+              Продолжить →
             </button>
           </div>
         </form>
@@ -61,29 +54,4 @@
     </div>
   </div>
 </div>
-
-<script>
-(function() {
-  const toggles = document.querySelectorAll('.industry-toggle');
-  const answerBlock = document.getElementById('industry_answer_block');
-  const answerField = document.getElementById('industry_answer');
-
-  function updateIndustryMode() {
-    const mode = document.querySelector('input[name="industry_mode"]:checked');
-    if (mode && mode.value === 'skip') {
-      answerBlock.style.display = 'none';
-      answerField.removeAttribute('required');
-    } else {
-      answerBlock.style.display = '';
-      answerField.setAttribute('required', 'required');
-    }
-  }
-
-  toggles.forEach(function(el) {
-    el.addEventListener('change', updateIndustryMode);
-  });
-
-  updateIndustryMode();
-})();
-</script>
 {% endblock %}
