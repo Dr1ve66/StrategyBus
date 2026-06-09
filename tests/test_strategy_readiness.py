@@ -271,6 +271,29 @@ class StrategyReadinessBankCentricTests(unittest.TestCase):
         self.assertIn("банк", result["reason"].lower())
 
 
+class OpportunityTierATests(unittest.TestCase):
+    """Positive/opportunity situations must be Tier A (proceed), not Tier B."""
+
+    OPPORTUNITY_PHRASES = (
+        "Клиент хочет сохранить и приумножить свободные денежные средства своего бизнеса",
+        "У клиента накопились свободные средства, не знает куда разместить",
+        "Клиент хочет выйти на маркетплейсы",
+        "Клиент хочет масштабироваться — открыть ещё 3 точки",
+        "Клиент ищет инвестора для расширения производства",
+        "Клиент хочет открыть новый магазин в соседнем городе",
+    )
+
+    def test_opportunity_phrases_are_tier_a(self):
+        for phrase in self.OPPORTUNITY_PHRASES:
+            with self.subTest(phrase=phrase):
+                result = assess_strategy_readiness(phrase)
+                self.assertTrue(result["ok"], msg=f"Should be ok=True: {phrase!r}")
+                self.assertEqual(
+                    result["tier"], READINESS_TIER_PROCEED,
+                    msg=f"Should be Tier A: {phrase!r}",
+                )
+
+
 class ManagerTaskGuardTests(unittest.TestCase):
     """Situations that describe the bank manager's task — must be rejected."""
 

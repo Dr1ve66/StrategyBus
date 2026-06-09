@@ -125,6 +125,14 @@ PROBLEM_ARCHETYPES = (
         "goal": "организовать приём безналичных платежей",
         "mechanism_family": "operational_recovery",
     },
+    {
+        "id": "free_cash",
+        "pattern": r"свободн\w+\s+(?:денежн\w+\s+)?средств|свободн\w+\s+капитал|приумножить\s+средств|разместить\s+средств|сохранить\s+и\s+приумножить",
+        "problem": "накопились свободные денежные средства",
+        "context": "финансы / казначейство",
+        "goal": "сохранить и приумножить свободные средства бизнеса",
+        "mechanism_family": "revenue_model",
+    },
 )
 
 DOMAIN_KEYWORDS = (
@@ -150,6 +158,19 @@ GOAL_TEMPLATES = (
 SYMPTOM_MARKERS = re.compile(
     r"проблем|пада|сниж|рост|текуч|дефицит|не\s+хватает|нужен|нужно|отсутств|"
     r"задерж|жалоб|убыт|долг|конкурент|отток|churn|эквайринг|налог",
+    re.IGNORECASE,
+)
+
+# Opportunity situations (positive intent): client wants to grow, invest, expand.
+OPPORTUNITY_MARKERS = re.compile(
+    r"хочет\s+(?:сохранить|приумножить|разместить|вложить|инвестировать|масштабировать|расширить|выйти|развить|запустить|открыть)|"
+    r"планирует\s+(?:открыть|расширить|выйти|запустить|развить|нарастить|увелич)|"
+    r"свободн\w+\s+(?:денежн\w+\s+)?средств|"
+    r"(?:приумножить|разместить|сохранить)\s+(?:денежн\w+\s+)?средств|"
+    r"выйти\s+на\s+(?:новый|новые|рынок|маркетплейс)|"
+    r"(?:открыть|запустить)\s+(?:новый|новое|новую|второй|третий)\s+\w+|"
+    r"масштабировать|нарастить\s+(?:продаж|выручку|портфель|клиент)|"
+    r"ищет\s+инвестор|привлечь\s+инвестиц",
     re.IGNORECASE,
 )
 
@@ -377,6 +398,8 @@ def problem_is_actionable(slots: dict, text: str) -> bool:
     if is_vague_request(normalized):
         return False
     if match_archetype(normalized):
+        return True
+    if OPPORTUNITY_MARKERS.search(normalized):
         return True
     problem = slots.get("problem") or {}
     value = str(problem.get("value") or "").strip()

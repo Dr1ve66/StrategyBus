@@ -113,8 +113,8 @@ def normalize_slot_questions(slot_options, missing):
         options = [str(item).strip() for item in options if str(item).strip()]
         if not options:
             options = [
-                "Снизить негативное влияние на бизнес",
-                "Стабилизировать ситуацию в ближайшие 1–3 месяца",
+                "Устранить конкретную проблему в бизнесе",
+                "Реализовать возможность для роста или развития",
                 "Другое (уточню сам)",
             ]
         elif not any("другое" in item.lower() for item in options):
