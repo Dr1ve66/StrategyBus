@@ -90,5 +90,84 @@ class ProductMatchingTests(unittest.TestCase):
         self.assertNotIn("hr_operations", profile["capabilities"])
 
 
+class ProductVariantETests(unittest.TestCase):
+    """Variant E: LLM assigns product in `product` field; system validates, never force-injects."""
+
+    def setUp(self):
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from app import detect_explicit_step_products, ensure_agent2_product_usage_local
+        self.detect_explicit_step_products = detect_explicit_step_products
+        self.ensure_agent2_product_usage_local = ensure_agent2_product_usage_local
+        self.products = load_products()
+
+    def test_product_field_returns_exact_match(self):
+        step = {
+            "title": "Разработать новые комбинации товаров",
+            "description": "Анализ и создание новых товарных наборов",
+            "product": "BenefittY – платформа управления программой лояльности",
+        }
+        matched = self.detect_explicit_step_products(step, self.products)
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(matched[0], "BenefittY – платформа управления программой лояльности")
+
+    def test_product_field_invalid_name_skips(self):
+        step = {
+            "title": "Разработать новые комбинации товаров",
+            "description": "...",
+            "product": "Несуществующий продукт банка",
+        }
+        matched = self.detect_explicit_step_products(step, self.products)
+        self.assertEqual(matched, [])
+
+    def test_product_field_empty_string_falls_through(self):
+        step = {
+            "title": "Разработать новые комбинации товаров",
+            "description": "Использовать продукт: BenefittY – платформа управления программой лояльности",
+            "product": "",
+        }
+        matched = self.detect_explicit_step_products(step, self.products)
+        # Falls through to text search — BenefittY name appears in description
+        self.assertTrue(any("BenefittY" in m for m in matched))
+
+    def test_ensure_agent2_product_usage_validates_not_forces(self):
+        step = {
+            "title": "Найти новых поставщиков",
+            "description": "Анализ рынка поставщиков сырья",
+            "logic": "Сравнить цены у разных поставщиков",
+            "criteria": "Выручка > 10 млн",
+            "product": "BenefittY – платформа управления программой лояльности",
+        }
+        result = self.ensure_agent2_product_usage_local([step], self.products, expected_count=1)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["product"], "BenefittY – платформа управления программой лояльности")
+
+    def test_ensure_agent2_product_usage_semantic_fallback_strict_threshold(self):
+        """Step with no product field and truly irrelevant text — no force-injection."""
+        # Use text that produces exactly one action (implement) and no domain overlaps.
+        # implement → any HR product scores 12, which is < MIN_PRODUCT_MATCH_SCORE (14).
+        step = {
+            "title": "XXX",
+            "description": "XXX",
+            "logic": "XXX",
+            "criteria": "XXX",
+            "product": "",
+        }
+        result = self.ensure_agent2_product_usage_local([step], self.products, expected_count=1)
+        # No product should be force-injected — semantic fallback with min_score=14 rejects it.
+        self.assertEqual(result[0].get("product", ""), "")
+
+    def test_ensure_agent2_product_usage_respects_llm_choice(self):
+        """LLM correctly assigned HR-платформа to a hiring step — system must keep it."""
+        step = {
+            "title": "Разместить вакансии на hh.ru",
+            "description": "Поиск сотрудников через платформы",
+            "logic": "Опубликовать вакансии",
+            "criteria": "Количество сотрудников > 5",
+            "product": "HR-платформа Saby",
+        }
+        result = self.ensure_agent2_product_usage_local([step], self.products, expected_count=1)
+        self.assertEqual(result[0]["product"], "HR-платформа Saby")
+
+
 if __name__ == "__main__":
     unittest.main()

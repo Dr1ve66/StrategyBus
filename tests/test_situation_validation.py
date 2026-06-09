@@ -9,8 +9,11 @@ from situation_validation import (
     build_situation_from_focus,
     call_situation_check,
     count_problems_heuristic,
+    infer_slots_from_text,
     normalize_situation_slot_check,
+    resolve_missing_blockers,
     run_basic_situation_guards,
+    try_rules_based_sufficiency,
     unpack_clarify_payload,
 )
 
@@ -31,7 +34,7 @@ class SituationValidationTests(unittest.TestCase):
             "reason": "достаточно",
             "normalized_text": "В компании высокая текучка кадров (HR). Цель — снизить текучку.",
         }
-        result = normalize_situation_slot_check(data)
+        result = normalize_situation_slot_check(data, original_text="текучка кадров")
         self.assertTrue(result["ok"])
         self.assertEqual(result["missing"], [])
         self.assertEqual(result["clarify_mode"], None)
@@ -52,7 +55,10 @@ class SituationValidationTests(unittest.TestCase):
             },
             "reason": "много проблем",
         }
-        result = normalize_situation_slot_check(data)
+        result = normalize_situation_slot_check(
+            data,
+            original_text="падают продажи; высокая текучка; нет эквайринга",
+        )
         self.assertFalse(result["ok"])
         self.assertEqual(result["clarify_mode"], "focus")
         self.assertIn("focus", result["missing"])
@@ -75,7 +81,7 @@ class SituationValidationTests(unittest.TestCase):
                 }
             },
         }
-        result = normalize_situation_slot_check(data)
+        result = normalize_situation_slot_check(data, original_text="что-то не так")
         self.assertFalse(result["ok"])
         self.assertEqual(result["clarify_mode"], "slots")
         self.assertEqual(result["missing"], ["problem"])
@@ -113,6 +119,58 @@ class SituationValidationTests(unittest.TestCase):
     def test_call_without_llm_uses_guard(self):
         result = call_situation_check("", lambda *_args, **_kwargs: {})
         self.assertFalse(result["ok"])
+
+    def test_churn_phrase_sufficient_without_clarify(self):
+        result = try_rules_based_sufficiency("у клиента отток клиентов")
+        self.assertIsNotNone(result)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["missing"], [])
+        self.assertIsNone(result["clarify_mode"])
+
+    def test_infer_churn_slots(self):
+        inferred = infer_slots_from_text("у клиента отток клиентов")
+        self.assertEqual(inferred["problem"], "отток клиентов")
+        self.assertIn("клиент", inferred["context"].lower())
+        self.assertIn("отток", inferred["goal"].lower())
+
+    def test_llm_context_goal_blockers_do_not_trigger_slots(self):
+        data = {
+            "agent1_ready": False,
+            "problem_count": 1,
+            "detected_problems": ["отток клиентов"],
+            "score": 55,
+            "missing_blockers": ["context", "goal"],
+            "slots": {
+                "problem": {"present": True, "value": "отток клиентов", "confidence": 0.95},
+            },
+            "slot_options": {
+                "context": {
+                    "message": "Где проявляется?",
+                    "options": ["Продажи", "Другое (уточню сам)"],
+                }
+            },
+        }
+        result = normalize_situation_slot_check(
+            data,
+            original_text="у клиента отток клиентов",
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["missing"], [])
+        self.assertIsNone(result["clarify_mode"])
+
+    def test_resolve_missing_blockers_ignores_inferable_slots(self):
+        slots = {
+            "problem": {"present": True, "value": "отток клиентов", "confidence": 0.95},
+        }
+        blockers = resolve_missing_blockers(slots, ["context", "goal"], agent1_ready=False)
+        self.assertEqual(blockers, [])
+
+    def test_resolve_missing_blockers_empty_llm_list_does_not_add_context(self):
+        slots = {
+            "problem": {"present": True, "value": "отток клиентов", "confidence": 0.95},
+        }
+        blockers = resolve_missing_blockers(slots, [], agent1_ready=False)
+        self.assertEqual(blockers, [])
 
 
 if __name__ == "__main__":

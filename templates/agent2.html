@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% from '_cards.html' import render_cards %}
 {% block content %}
+{# Serialize product catalog to JSON for client-side search #}
+<script id="productCatalogData" type="application/json">
+{{ products | tojson }}
+</script>
 <div class="page-header d-flex flex-column flex-lg-row justify-content-between gap-3">
   <div>
     <div class="eyebrow mb-2">Этап 2</div>
@@ -23,7 +27,7 @@
 </div>
 
 {% if responses %}
-  {{ render_cards(responses, 'item2') }}
+  {{ render_cards(responses, 'item2', products) }}
 {% else %}
   <div class="alert alert-danger d-flex justify-content-between align-items-center gap-3">
     <span>Ошибка обработки ответа AI. Попробуйте ещё раз.</span>
@@ -39,9 +43,12 @@
       <!-- Кнопка генерации новых шагов -->
       <form method="post" action="{{ url_for('more_agent2', selected_id=selected.id) }}" data-ai-form
             data-ai-title="Генерируем новый шаг"
-            data-ai-subtitle="Учитываем выбранную стратегию, продукты и ваши отказы…">
+            data-ai-subtitle="Учитываем выбранную стратегию и ваши отказы…">
         <button class="btn btn-outline-primary btn-lg" type="submit">Сгенерировать ещё шаг</button>
       </form>
+
+      <button class="btn btn-outline-primary btn-lg" type="button"
+              data-bs-toggle="modal" data-bs-target="#productStepModal">+ Добавить шаг с сервисом</button>
 
       <button class="btn btn-outline-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#customItemModal">Добавить свой шаг</button>
       <form method="post" action="{{ url_for('agent2_finish', selected_id=selected.id) }}">
@@ -113,6 +120,54 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
           <button type="submit" class="btn btn-primary">Добавить и выбрать</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Модал: добавить шаг с сервисом банка -->
+<div class="modal fade" id="productStepModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <form method="post"
+            action="{{ url_for('generate_product_step', selected_id=selected.id) }}"
+            data-ai-form
+            data-ai-title="Генерируем шаг с сервисом банка"
+            data-ai-subtitle="Подбираем бизнес-действие под выбранный сервис…"
+            id="productStepForm">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title">Добавить шаг с сервисом банка</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small mb-3">
+            Выберите сервис банка — система сгенерирует шаг к стратегии, в котором этот сервис поможет клиенту.
+          </p>
+          <label class="form-label fw-semibold">Сервис банка</label>
+          <input type="hidden" name="product_name" id="modalProductNameHidden">
+          <div class="product-combobox position-relative" id="modalProductCombobox">
+            <div class="input-group">
+              <input type="text"
+                     class="form-control"
+                     id="modalProductSearch"
+                     placeholder="Начните вводить название…"
+                     autocomplete="off">
+              <button type="button" class="btn btn-outline-secondary"
+                      id="modalProductClearBtn" style="display:none">✕</button>
+            </div>
+            <div class="product-options-list list-group position-absolute w-100 shadow d-none"
+                 id="modalProductList"
+                 style="z-index:400;max-height:220px;overflow-y:auto;"></div>
+          </div>
+          <div id="modalProductError" class="text-danger small mt-1 d-none">
+            Выберите сервис из списка.
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-primary" id="productStepSubmitBtn" disabled>
+            Сгенерировать шаг →
+          </button>
         </div>
       </form>
     </div>

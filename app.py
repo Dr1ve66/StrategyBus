@@ -48,7 +48,6 @@ from product_metadata import (
 )
 
 db = SQLAlchemy()
-PRODUCT_STEP_RATIO = 0.7
 
 def create_app():
     app = Flask(__name__)
@@ -68,6 +67,8 @@ def create_app():
     with app.app_context():
         db.create_all()
         ensure_situation_check_schema()
+        ensure_agent2_product_column()
+        ensure_industry_check_schema()
         # Блокируем все legacy-учётки "admin" (созданные до системы регистрации).
         # Обнуляем password_hash → login_required не пропустит (проверка if user.password_hash).
         # Данные (UserInput и всё связанное) остаются нетронутыми.
@@ -166,6 +167,7 @@ class Agent2Response(db.Model):
     description = db.Column(db.Text, nullable=False)
     logic = db.Column(db.Text, nullable=False)
     criteria = db.Column(db.Text, nullable=False)
+    product = db.Column(db.String(500), nullable=True)
     status = db.Column(db.String(20), nullable=False, default="pending")
     was_edited = db.Column(db.Boolean, nullable=False, default=False)
     implemented = db.Column(db.Boolean, default=False)
@@ -213,6 +215,9 @@ class IndustryCheck(db.Model):
     industry_context_found_in_description = db.Column(db.Boolean, nullable=False, default=False)
     trigger = db.Column(db.String(64), nullable=False, default="none")
     reason = db.Column(db.Text, nullable=True)
+    problem_nature = db.Column(db.String(30), nullable=True)
+    is_universal_problem = db.Column(db.Boolean, nullable=False, default=False)
+    dependency_test_passed = db.Column(db.Boolean, nullable=False, default=False)
     question = db.Column(db.Text, nullable=True)
     answer = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), nullable=False, default="checked")
@@ -240,10 +245,48 @@ class SituationCheck(db.Model):
     user_input = db.relationship("UserInput", backref=db.backref("situation_checks", lazy=True))
 
 def product_catalog_paths():
+    base = os.path.dirname(__file__)
     return [
-        os.path.join(os.path.dirname(__file__), "data", "products.txt"),
+        os.path.join(base, "data", "Products.xlsx"),
+        os.path.join(base, "data", "products.txt"),
+        "/app/data/Products.xlsx",
         "/app/data/products.txt",
     ]
+
+
+def _safe_cell(val):
+    if val is None:
+        return ""
+    try:
+        import math as _math
+        if isinstance(val, float) and _math.isnan(val):
+            return ""
+    except Exception:
+        pass
+    s = str(val).strip()
+    return "" if s in ("None", "nan") else s
+
+
+def _load_product_catalog_xlsx(path):
+    try:
+        df = pd.read_excel(path, sheet_name="Лист3", header=None, engine="openpyxl")
+    except Exception as e:
+        print(f"Warning: cannot load {path}: {e}", flush=True)
+        return []
+    products = []
+    for _, row in df.iterrows():
+        if len(row) < 4:
+            continue
+        name_raw = _safe_cell(row.iloc[2])
+        description = _safe_cell(row.iloc[3])
+        if not name_raw or name_raw == "Сервис (код)":
+            continue
+        # Strip internal product codes, e.g. "(0000015882)"
+        name = re.sub(r"\s*\(\d{7,}\)\s*$", "", name_raw).strip()
+        if not name:
+            continue
+        products.append({"name": name, "description": description, "problems": ""})
+    return products
 
 _PRODUCT_CATALOG_CACHE = {"path": None, "mtime": None, "products": []}
 _PRODUCT_CAPABILITIES_CACHE = {}
@@ -260,15 +303,18 @@ def load_product_catalog():
     cache = _PRODUCT_CATALOG_CACHE
     if cache["path"] == catalog_path and cache["mtime"] == mtime:
         return cache["products"]
-    products = []
-    with open(catalog_path, encoding="utf-8", newline="") as f:
-        reader = csv.DictReader(f, delimiter=";")
-        for row in reader:
-            name = (row.get("Название продукта") or "").strip()
-            description = (row.get("Что делает продукт/сервис") or "").strip()
-            problems = (row.get("Какие проблемы помогает решить") or "").strip()
-            if name and description:
-                products.append({"name": name, "description": description, "problems": problems})
+    if catalog_path.endswith(".xlsx"):
+        products = _load_product_catalog_xlsx(catalog_path)
+    else:
+        products = []
+        with open(catalog_path, encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f, delimiter=";")
+            for row in reader:
+                name = (row.get("Название продукта") or "").strip()
+                description = (row.get("Что делает продукт/сервис") or "").strip()
+                problems = (row.get("Какие проблемы помогает решить") or "").strip()
+                if name and description:
+                    products.append({"name": name, "description": description, "problems": problems})
     cache["path"] = catalog_path
     cache["mtime"] = mtime
     cache["products"] = products
@@ -373,6 +419,94 @@ def segment_group_for_company_size(company_size):
     return ""
 
 # === PROMPTS ===
+PROMPT_METHODOLOGY_CHECK = """
+Ты — строгий методист. Проверь текст на соответствие методологии.
+Верни JSON: {"violation": true/false, "violation_type": "product_request | bank_problem | general_complaint | abstract | none", "reason": "...", "rewrite_hint": "...", "example": "..."}
+
+Категории нарушений:
+1. product_request — пользователь просит конкретный продукт/услугу банка, а не описывает бизнес-проблему.
+   Примеры: «нужен кредит», «хочу открыть счёт», «дайте страховку», «рассчитайте лизинг».
+2. bank_problem — проблема банка, а не бизнеса клиента.
+   Примеры: «клиент не берёт кредит», «клиент уходит из банка», «клиент перестал пользоваться продуктом».
+3. general_complaint — жалоба на жизнь, нытьё без формулировки решаемой проблемы.
+   Примеры: «тяжёлая жизнь», «всё плохо», «не знаю что делать», «бизнес не идёт».
+4. abstract — слишком абстрактное описание без привязки к конкретной бизнес-ситуации.
+   Примеры: «улучшить бизнес», «развитие компании», «хочу больше денег».
+
+Если нарушение есть:
+- violation = true
+- violation_type — одна из категорий выше
+- reason — объяснение пользователю, почему текст не подходит
+- rewrite_hint — что конкретно нужно описать (на русском)
+- example — один конкретный пример правильного описания похожей бизнес-проблемы
+
+Если нарушений нет:
+- violation = false
+- violation_type = "none"
+- reason = ""
+- rewrite_hint = ""
+- example = ""
+"""
+
+PROMPT_DEPENDENCY_TEST = """
+Ты — бизнес-аналитик. Определи природу проблемы через тест на зависимость от отрасли.
+
+Верни строго JSON:
+{
+  "problem_nature": "FINANCIAL | OPERATIONAL | STRATEGIC | REGULATORY | MARKET",
+  "is_universal_problem": true/false,
+  "dependency_test_passed": true/false,
+  "reason": "..."
+}
+
+Правила:
+1. Определи problem_nature (природу проблемы):
+   - FINANCIAL — проблема с деньгами: кассовый разрыв, нехватка оборотных средств, убытки, рост затрат
+   - OPERATIONAL — проблема с процессами: сбои в производстве, логистика, найм, удержание персонала
+   - STRATEGIC — проблема с рынком/конкурентами: падение продаж, потеря доли рынка, смена модели
+   - REGULATORY — проблема с регулированием: лицензии, налоги, проверки, compliance
+   - MARKET — проблема с клиентами/спросом: отток клиентов, низкая конверсия, сезонность
+
+2. Проведи Dependency Test:
+   Представь две компании из РАЗНЫХ отраслей с одинаковой формулировкой проблемы.
+   Нужны ли им ПРИНЦИПИАЛЬНО разные стратегии?
+   Если стратегии одинаковые → is_universal_problem = true → dependency_test_passed = true.
+   Если стратегии сильно зависят от отрасли → is_universal_problem = false → dependency_test_passed = false.
+
+   Пример универсальной проблемы:
+   «Кассовый разрыв из-за отсрочек клиентов на 60 дней» — и мебельщику, и транспортной компании нужен один подход (факторинг, управление дебиторкой, пересмотр условий оплаты). Стратегии не зависят от отрасли.
+
+   Пример отрасле-зависимой проблемы:
+   «Поставщики сырья подняли цены на 20%» — для пекарни (мука), для стройки (металл) и для IT (серверы) стратегии принципиально разные: замена поставщика, долгосрочные контракты, смена технологии.
+
+3. Правило: FINANCIAL и OPERATIONAL проблемы ЧАЩЕ универсальны.
+   REGULATORY и MARKET проблемы ЧАЩЕ отрасле-зависимы.
+   Но всегда анализируй конкретную формулировку, а не только категорию.
+
+4. reason — короткое обоснование (1-2 предложения на русском).
+"""
+
+PROMPT_CLARIFY_ADDON = """
+
+ДОПОЛНИТЕЛЬНЫЕ ПРАВИЛА — учёт универсальности проблемы:
+
+1. Если проблема универсальная (FINANCIAL или OPERATIONAL, не зависит от отрасли):
+   - НЕ задавай вопрос про отрасль
+   - Если отрасль уже указана размыто — не уточняй, оставь как есть
+   - Фокусируйся на уточнении РЕСУРСОВ и МАСШТАБА, а не отрасли
+
+2. Если проблема отрасле-зависимая (REGULATORY, MARKET, или STRATEGIC с отраслевой спецификой):
+   - Проверь, указана ли отрасль с достаточной детализацией
+   - Если размыто и триггер сработал — задай ОДИН уточняющий вопрос
+
+3. При формировании вопроса про отрасль учитывай problem_nature:
+   - FINANCIAL → НЕ задавай вопрос про отрасль (она не влияет на стратегию)
+   - OPERATIONAL → НЕ задавай вопрос про отрасль (процессные решения универсальны)
+   - STRATEGIC → задавай только если нужна специфика рынка
+   - REGULATORY → задавай (регуляторика отрасле-специфична)
+   - MARKET → задавай если B2B/B2C различается
+"""
+
 PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летним опытом работы с корпоративными клиентами.
 Твоя задача: сформировать 1 стратегию для клиента на основе входных данных.
 Определение стратегии
@@ -476,32 +610,34 @@ PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летни
 PROMPT_A = os.environ.get("PROMPT_A", PROMPT_A_DESC)
 
 PROMPT_B_DESC = """Ты — бизнес консультант с 20-летним опытом работы с корпоративными клиентами.
-К выбранной стратегии подбери ровно 5 шагов.
+К выбранной стратегии подбери ровно 3 шага.
 Шаги должны быть выстроены в логическом и временном порядке.
 Шаг — это простое действие, которое можно выполнить на практике и которое не требует дальнейшего разбиения для исполнителя.
 Название Шага должно начинаться с глагола.
-Каждый шаг должен быть:однозначным, реализуемым, ограниченным по сроку, привязанным к цели стратегии.
-Пример: изучить информацию о торгах, провести аудит соответствия компании, сделать ремонт помещения, проверить документы УКЭП, проанализируй бизнес, подобрать тендер.
+Каждый шаг должен быть: однозначным, реализуемым, ограниченным по сроку, привязанным к цели стратегии.
+Пример: изучить информацию о торгах, провести аудит соответствия компании, сделать ремонт помещения, проверить документы УКЭП, проанализировать бизнес, подобрать тендер.
 Избегай общих и абстрактных формулировок, не используй слова без конкретизации: «улучшить», «оптимизировать», «усилить», «развить», «проработать».
 Каждый шаг должен быть реализуем в срок до 1 месяца.
 Принадлежность Шага к Стратегии очевидна.
 Критерии — это критерии кому данный Шаг не подходит.
-Критерии должны:
-относиться или к открытым данным, т.е. их можно найти в интернете (например:отраль, оквэд, регион работы,наличие товарного знака, лицензии) и/или к данным которые могут есть в банке (например:количество покупателей и поставщиков,
-количество сотрудников, размер выручки, срок деятельности, назначения платежей в транзакциях). Не предлагай Критерии которые можно узнать только работая в самой компании (например: есть ли в штате должность юриста,
-у компании есть pipeline по продажам и подобное)
-иметь числовое значение или это значение можно получить с помощью вычислений. То есть не указывай "не подходит по ОКВЭД", пиши - "не подходит ОКВЭД 01, 02"
-Не менее 70% предложенных Шагов должны использовать продукты и/или сервисы из актуального списка ниже.
-Если шаг использует продукт, явно укажи точное название продукта из списка в description или logic.
-Не придумывай продукты вне списка.
+Критерии должны: относиться к открытым данным (отрасль, ОКВЭД, регион, лицензии) или к данным банка (выручка, количество сотрудников, срок деятельности, назначения платежей). Не предлагай критерии, которые можно узнать только внутри компании. Иметь числовое значение — не «не подходит по ОКВЭД», а «не подходит ОКВЭД 01, 02».
+Поле "product" всегда оставляй пустым ("") — сервис банка к шагу добавит менеджер вручную.
 """
-PRODUCT_CATALOG_PROMPT = build_product_catalog_prompt()
 PROMPT_B_BASE = os.environ.get("PROMPT_B", PROMPT_B_DESC)
-PROMPT_B = f"{PROMPT_B_BASE}\n\nАктуальный список продуктов и сервисов:\n{PRODUCT_CATALOG_PROMPT}"
 
-def get_prompt_b(compact=True):
-    catalog = build_product_catalog_prompt(compact=compact)
-    return f"{PROMPT_B_BASE}\n\nАктуальный список продуктов и сервисов:\n{catalog}"
+PROMPT_PRODUCT_STEP = """Ты — бизнес-консультант. Сгенерируй ОДИН конкретный шаг для реализации стратегии.
+При выполнении этого шага клиенту поможет указанный сервис банка.
+Требования:
+- Шаг описывает реальное бизнес-действие клиента, а не «подключить продукт» или «оформить сервис»
+- Сервис банка — инструмент внутри шага, а не цель самого шага
+- Название начинается с глагола
+- Однозначное, реализуемое действие, срок до 1 месяца
+- Явная связь с целью стратегии
+- Поле "product" должно содержать ТОЧНОЕ название сервиса банка, переданного в запросе
+"""
+
+def get_prompt_b():
+    return PROMPT_B_BASE
 
 JSON_INSTRUCTIONS = """
 ВАЖНО: Отвечай строго в формате JSON — от 1 до 10 вариантов:
@@ -516,6 +652,40 @@ JSON_INSTRUCTIONS = """
 },
 { "id": 2, "title": "", "description": "", "logic": "", "criteria": "", "implemented": ""},
 { "id": 3, "title": "", "description": "", "logic": "", "criteria": "", "implemented": ""}
+]}
+Никакого текста вне JSON.
+"""
+
+JSON_INSTRUCTIONS_AGENT2 = """
+ВАЖНО: Отвечай строго в формате JSON — ровно 3 шага:
+{ "items": [
+{
+ "id": 1,
+ "title": "Краткое название шага (начинается с глагола)",
+ "description": "Описание шага (2-3 предложения)",
+ "logic": "Логика и обоснование",
+ "criteria": "Критерии — кому шаг не подходит (с числовыми значениями)",
+ "product": "",
+ "implemented": "Флаг реализации (ОБЯЗАТЕЛЬНО ЗАПОЛНИТЬ значением Реализована или Не реализована)"
+},
+{ "id": 2, "title": "", "description": "", "logic": "", "criteria": "", "product": "", "implemented": ""},
+{ "id": 3, "title": "", "description": "", "logic": "", "criteria": "", "product": "", "implemented": ""}
+]}
+Никакого текста вне JSON.
+"""
+
+JSON_INSTRUCTIONS_SINGLE_STEP = """
+ВАЖНО: Отвечай строго в формате JSON — ровно 1 шаг:
+{ "items": [
+{
+ "id": 1,
+ "title": "Краткое название шага (начинается с глагола)",
+ "description": "Описание шага (2-3 предложения) — объясни, как сервис банка помогает в этом действии",
+ "logic": "Логика — почему именно этот сервис банка уместен здесь",
+ "criteria": "Критерии — кому шаг не подходит (с числовыми значениями)",
+ "product": "ТОЧНОЕ название сервиса банка из запроса",
+ "implemented": "Не реализована"
+}
 ]}
 Никакого текста вне JSON.
 """
@@ -582,6 +752,24 @@ key должен быть понятным (snake_case)
 "Для снижения издержек важно знать физику товара. Скоропортящиеся продукты требуют холодильников и имеют списание — а стройматериалы нет. Стратегия для этих случаев будет принципиально разной."
 
 Не задавай вопрос про отрасль, если она уже указана детально или если проблема НЕ требует конкретики отрасли.
+
+ДОПОЛНИТЕЛЬНЫЕ ПРАВИЛА — учёт универсальности проблемы:
+
+1. Если проблема универсальная (FINANCIAL или OPERATIONAL, не зависит от отрасли):
+   - НЕ задавай вопрос про отрасль
+   - Если отрасль уже указана размыто — не уточняй, оставь как есть
+   - Фокусируйся на уточнении РЕСУРСОВ и МАСШТАБА, а не отрасли
+
+2. Если проблема отрасле-зависимая (REGULATORY, MARKET, или STRATEGIC с отраслевой спецификой):
+   - Проверь, указана ли отрасль с достаточной детализацией
+   - Если размыто и триггер сработал — задай ОДИН уточняющий вопрос
+
+3. При формировании вопроса про отрасль учитывай problem_nature:
+   - FINANCIAL → НЕ задавай вопрос про отрасль (она не влияет на стратегию)
+   - OPERATIONAL → НЕ задавай вопрос про отрасль (процессные решения универсальны)
+   - STRATEGIC → задавай только если нужна специфика рынка
+   - REGULATORY → задавай (регуляторика отрасле-специфична)
+   - MARKET → задавай если B2B/B2C различается
 """
 
 PROMPT_INDUSTRY_CHECK = """
@@ -605,6 +793,13 @@ PROMPT_INDUSTRY_CHECK = """
 5. Если industry_detail_required = true, обязательно заполни strategy_impact_if_unknown:
    одно конкретное предложение, ЧТО именно в стратегии/шагах/продуктах изменится после ответа.
    Без этого поля нельзя ставить industry_detail_required = true.
+
+КРИТИЧЕСКОЕ ПРАВИЛО ДЛЯ УНИВЕРСАЛЬНЫХ ПРОБЛЕМ:
+Если problem_nature = "FINANCIAL" или problem_nature = "OPERATIONAL",
+то industry_detail_required ВСЕГДА = false.
+Для этих типов проблем отрасль НЕ влияет на стратегию —
+решение одно и то же для любой компании (факторинг, управление дебиторкой,
+оптимизация затрат, найм, удержание).
 
 Не задавай общих вопросов вроде «уточните отрасль» или «в какой отрасли работает компания».
 Вопрос должен быть привязан к ситуации и к решению, которое зависит от отрасли.
@@ -711,7 +906,7 @@ def normalize_items(content):
     normalized = []
     for index, item in enumerate(items[:10], start=1):
         if not isinstance(item, dict):
-            item = {"title": str(item), "description": "", "logic": "", "criteria": ""}
+            item = {"title": str(item), "description": "", "logic": "", "criteria": "", "product": ""}
         implemented = to_bool(item.get("implemented"))
         normalized.append({
             "item_number": int(item.get("id") or index),
@@ -719,19 +914,21 @@ def normalize_items(content):
             "description": str(item.get("description") or ""),
             "logic": str(item.get("logic") or ""),
             "criteria": str(item.get("criteria") or ""),
+            "product": str(item.get("product") or "").strip(),
             "implemented": implemented,
         })
     return normalized
 
-def call_openai(system_prompt, user_message):
+def call_openai(system_prompt, user_message, json_instructions=None):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key: raise RuntimeError("OPENAI_API_KEY is not configured")
-    client = OpenAI(api_key=api_key, timeout=60)
+    instructions = json_instructions if json_instructions is not None else JSON_INSTRUCTIONS
+    client = OpenAI(api_key=api_key, timeout=120)
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": f"{system_prompt.strip()}\n\n{JSON_INSTRUCTIONS.strip()}"},
+            {"role": "system", "content": f"{system_prompt.strip()}\n\n{instructions.strip()}"},
             {"role": "user", "content": user_message},
         ],
     )
@@ -740,7 +937,7 @@ def call_openai(system_prompt, user_message):
 def call_openai_raw(system_prompt, user_message):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key: raise RuntimeError("OPENAI_API_KEY is not configured")
-    client = OpenAI(api_key=api_key, timeout=60)
+    client = OpenAI(api_key=api_key, timeout=120)
     enhanced_prompt = f"{system_prompt.strip()}\nВАЖНО: Ответь строго в формате JSON. Никакого текста вне JSON."
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -806,6 +1003,7 @@ def step_text_for_product_match(item):
     ]))
 
 MIN_PRODUCT_MATCH_SCORE = 14
+PRODUCT_STEP_RATIO = 0.7
 
 STEP_ACTION_PATTERNS = {
     "research": r"изуч|анализ|исслед|обзор|сравн|собра|проанализ|оцен|бенчмарк|практик|кейс|лучш.{0,12}опыт|монитор",
@@ -1083,6 +1281,18 @@ def build_step_product_payload(step, product, intent=None):
 
 def detect_explicit_step_products(item, products=None, intent=None):
     products = products if products is not None else load_product_catalog()
+
+    # LLM-assigned product (Variant E): if the step has a non-empty "product" field
+    # matching a catalog entry, trust the LLM and return it.
+    if isinstance(item, dict):
+        product_field = str(item.get("product") or "").strip()
+    else:
+        product_field = str(getattr(item, "product", "") or "").strip()
+    if product_field:
+        by_name = {p["name"]: p for p in products}
+        if product_field in by_name:
+            return [product_field]
+
     intent = intent or extract_step_intent(item)
     step_text = intent["text"]
     matched = []
@@ -1108,6 +1318,7 @@ def agent2_step_dict(item):
         "description": item.description,
         "logic": item.logic,
         "criteria": item.criteria,
+        "product": getattr(item, "product", "") or "",
     }
 
 def recommend_step_products(item, products=None, limit=1):
@@ -1222,38 +1433,66 @@ def mark_implemented_steps_local(items):
     return updated
 
 def ensure_agent2_product_usage_local(items, products, expected_count):
+    """
+    Validate LLM-assigned products (Variant E).
+    - Steps with a valid product field → count as product-used
+    - Steps without → try semantic matching with min_score=14 as fallback
+    - If below 70% threshold → accept as-is (no force-injection)
+    """
     expected_count = expected_count or len(items)
     current = [dict(item) for item in items[:expected_count]]
-    report = product_usage_report(current, products)
-    if not report["ok"]:
-        current = annotate_steps_with_products(current, products, report["required"])
+    products = products if products is not None else load_product_catalog()
+    by_name = {p["name"]: p for p in products}
+
+    # Count steps that already have a valid product from LLM
+    for item in current:
+        product_field = str(item.get("product") or "").strip()
+        if product_field and product_field in by_name:
+            item["_product_valid"] = True
+        else:
+            item["_product_valid"] = False
+
+    product_count = sum(1 for item in current if item["_product_valid"])
+    required = math.ceil(expected_count * PRODUCT_STEP_RATIO)
+
+    if product_count < required:
+        # LLM didn't assign enough products. Try semantic fallback with strict threshold.
+        for item in current:
+            if item["_product_valid"]:
+                continue
+            matched = recommend_step_products(item, products, limit=1)
+            if matched:
+                item["product"] = matched[0]["name"]
+                item["_product_valid"] = True
+
     if len(current) < expected_count:
         raise RuntimeError(f"AI вернул недостаточно шагов: {len(current)} из {expected_count}")
     return current[:expected_count]
 
+
 def annotate_steps_with_products(items, products, required):
-    updated = [dict(item) for item in items]
-    for item in updated:
-        if sum(1 for step in updated if detect_step_products(step, products)) >= required:
-            break
-        if detect_step_products(item, products):
-            continue
-        recommended = recommend_step_products(item, products, limit=1)
-        if not recommended:
-            recommended = rank_products_for_step(item, products, limit=1, min_score=6)
-        if not recommended:
-            continue
-        product_name = recommended[0]["name"]
-        description = (item.get("description") or "").strip()
-        item["description"] = f"{description} Использовать продукт: {product_name}.".strip()
-    return updated
+    """
+    DEPRECATED — kept for backward compatibility, no longer called.
+    Variant E: LLM assigns products; this function is never invoked.
+    """
+    return [dict(item) for item in items]
 
 def generate_agent2_items(message, expected_count):
-    products = load_product_catalog()
-    items = call_openai(get_prompt_b(), message)[:expected_count]
-    items = ensure_agent2_product_usage_local(items, products, expected_count)
+    items = call_openai(get_prompt_b(), message, json_instructions=JSON_INSTRUCTIONS_AGENT2)[:expected_count]
+    if len(items) < expected_count:
+        raise RuntimeError(f"AI вернул недостаточно шагов: {len(items)} из {expected_count}")
     return mark_implemented_steps_local(items)[:expected_count]
 
+
+def ensure_agent2_product_column():
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.engine)
+    if "agent2_responses" not in inspector.get_table_names():
+        return
+    columns = {c["name"] for c in inspector.get_columns("agent2_responses")}
+    if "product" not in columns:
+        db.session.execute(text("ALTER TABLE agent2_responses ADD COLUMN product VARCHAR(500)"))
+        db.session.commit()
 
 def ensure_situation_check_schema():
     from sqlalchemy import inspect, text
@@ -1266,6 +1505,24 @@ def ensure_situation_check_schema():
         statements.append("ALTER TABLE situation_checks ADD COLUMN slot_questions TEXT")
     if "slots_filled" not in columns:
         statements.append("ALTER TABLE situation_checks ADD COLUMN slots_filled TEXT")
+    for statement in statements:
+        db.session.execute(text(statement))
+    if statements:
+        db.session.commit()
+
+def ensure_industry_check_schema():
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.engine)
+    if "industry_checks" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("industry_checks")}
+    statements = []
+    if "problem_nature" not in columns:
+        statements.append("ALTER TABLE industry_checks ADD COLUMN problem_nature VARCHAR(30)")
+    if "is_universal_problem" not in columns:
+        statements.append("ALTER TABLE industry_checks ADD COLUMN is_universal_problem BOOLEAN NOT NULL DEFAULT 0")
+    if "dependency_test_passed" not in columns:
+        statements.append("ALTER TABLE industry_checks ADD COLUMN dependency_test_passed BOOLEAN NOT NULL DEFAULT 0")
     for statement in statements:
         db.session.execute(text(statement))
     if statements:
@@ -1559,6 +1816,27 @@ def call_industry_check(company_size, company_industry, situation_description, p
     result = normalize_industry_check(data, company_industry)
     return finalize_industry_check(result, situation_description, signal, company_industry)
 
+def call_methodology_check(situation_description):
+    message = json.dumps({"situation_description": situation_description}, ensure_ascii=False)
+    data = call_openai_raw(PROMPT_METHODOLOGY_CHECK, message)
+    return {
+        "violation": to_bool(data.get("violation", False)),
+        "violation_type": str(data.get("violation_type", "none")),
+        "reason": str(data.get("reason", "")),
+        "rewrite_hint": str(data.get("rewrite_hint", "")),
+        "example": str(data.get("example", "")),
+    }
+
+def call_dependency_test(situation_description):
+    message = json.dumps({"situation_description": situation_description}, ensure_ascii=False)
+    data = call_openai_raw(PROMPT_DEPENDENCY_TEST, message)
+    return {
+        "problem_nature": str(data.get("problem_nature", "")),
+        "is_universal_problem": to_bool(data.get("is_universal_problem", False)),
+        "dependency_test_passed": to_bool(data.get("dependency_test_passed", False)),
+        "reason": str(data.get("reason", "")),
+    }
+
 def create_clarification_if_needed(input_id):
     user_input = get_input_or_403(input_id)
     final_input = build_final_input(user_input, None)
@@ -1579,6 +1857,11 @@ def create_clarification_if_needed(input_id):
 def run_context_checks_after_situation(input_id):
     user_input = get_input_or_403(input_id)
     fields = extract_user_input_fields(user_input.input_text)
+
+    # --- Problem Nature Router: Dependency Test ---
+    dep_test = call_dependency_test(fields["situation_description"])
+
+    # --- Industry Check с учётом природы проблемы ---
     check_data = call_industry_check(
         fields["company_size"],
         fields["company_industry"],
@@ -1586,10 +1869,20 @@ def run_context_checks_after_situation(input_id):
         fields["product_name"],
         signals_joined(fields["signals"]),
     )
+
+    # Если проблема универсальная — принудительно снимаем флаг
+    if dep_test["is_universal_problem"]:
+        check_data["industry_detail_required"] = False
+
+    payload = industry_check_db_payload(check_data)
+    payload["problem_nature"] = dep_test["problem_nature"]
+    payload["is_universal_problem"] = dep_test["is_universal_problem"]
+    payload["dependency_test_passed"] = dep_test["dependency_test_passed"]
+
     industry_check = IndustryCheck(
         input_id=user_input.id,
         status="needs_answer" if check_data["industry_detail_required"] and check_data["question"] else "checked",
-        **industry_check_db_payload(check_data)
+        **payload
     )
     db.session.add(industry_check)
     db.session.commit()
@@ -1604,7 +1897,7 @@ def run_context_checks_after_situation(input_id):
 def call_openai_check_str(item):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key: raise RuntimeError("OPENAI_API_KEY is not configured")
-    client = OpenAI(api_key=api_key, timeout=60)
+    client = OpenAI(api_key=api_key, timeout=120)
     system_prompt = "Ты на вход получишь одну или несколько стратегий.\nСравни стратегии, которые тебе передали, с уже существующими из списка по названию и логике -\n"
     try:
         df = pd.read_excel('strategies.xlsx')
@@ -1628,7 +1921,7 @@ def call_openai_check_str(item):
 def call_openai_check_stp(item):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key: raise RuntimeError("OPENAI_API_KEY is not configured")
-    client = OpenAI(api_key=api_key, timeout=60)
+    client = OpenAI(api_key=api_key, timeout=120)
     system_prompt = "Ты на вход получишь один или несколько шагов\nСравни стратегию или шаг, которую тебе передали, с уже существующими из списка по названию -\n"
     try:
         df = pd.read_excel('steps.xlsx')
@@ -1724,7 +2017,8 @@ def create_more_agent1_responses(input_id):
     if not final_items:
         raise RuntimeError("AI вернул пустой список стратегий")
     for item in final_items:
-        db.session.add(Agent1Response(input_id=input_id, round_number=next_round, status="pending", **item))
+        db.session.add(Agent1Response(input_id=input_id, round_number=next_round, status="pending",
+                                      **{k: v for k, v in item.items() if k != "product"}))
 
 def create_more_agent2_responses(selected_id):
     selected = Agent1Selected.query.get_or_404(selected_id)
@@ -1776,7 +2070,8 @@ def create_more_agent2_responses(selected_id):
     start_number = max([r.item_number for r in previous_responses], default=0)
     for index, item in enumerate(final_items, start=1):
         item["item_number"] = start_number + index
-        db.session.add(Agent2Response(selected_id=selected_id, status="pending", **item))
+        db.session.add(Agent2Response(selected_id=selected_id, status="pending",
+                                      **{k: v for k, v in item.items() if not k.startswith("_")}))
 
 def next_agent1_item_number(input_id):
     return max([item.item_number for item in Agent1Response.query.filter_by(input_id=input_id).all()], default=0) + 1
@@ -2080,6 +2375,23 @@ def register_routes(app):
         db.session.add(user_input); db.session.commit()
         try:
             if situation_description:
+                # --- Methodology Check: фильтр мусорных вводов ---
+                methodology = call_methodology_check(situation_description)
+                if methodology["violation"]:
+                    situation_result = {
+                        "ok": False,
+                        "score": 0,
+                        "reason": methodology["reason"],
+                        "rewrite_hint": methodology["rewrite_hint"],
+                        "example": methodology["example"],
+                        "missing": [],
+                        "normalized_text": situation_description,
+                        "clarify_payload": {},
+                    }
+                    situation_check = save_situation_check(user_input.id, situation_description, situation_result)
+                    db.session.commit()
+                    return redirect(auth_url("situation_clarify", input_id=user_input.id))
+
                 situation_result = call_situation_check(situation_description)
                 situation_check = save_situation_check(user_input.id, situation_description, situation_result)
                 if situation_check.ok:
@@ -2091,7 +2403,6 @@ def register_routes(app):
         except Exception as e:
             db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
             return redirect(url_for("index"))
-        return redirect(auth_url("context_clarify", input_id=user_input.id))
 
     @app.route("/situation_clarify/<int:input_id>")
     @login_required
@@ -2172,6 +2483,24 @@ def register_routes(app):
                 flash("Опишите ситуацию компании, чтобы продолжить.", "warning")
                 return redirect(auth_url("situation_clarify", input_id=input_id))
         try:
+            # --- Methodology Check: фильтр мусорных вводов ---
+            methodology = call_methodology_check(situation_description)
+            if methodology["violation"]:
+                situation_result = {
+                    "ok": False,
+                    "score": 0,
+                    "reason": methodology["reason"],
+                    "rewrite_hint": methodology["rewrite_hint"],
+                    "example": methodology["example"],
+                    "missing": [],
+                    "normalized_text": situation_description,
+                    "clarify_payload": {},
+                }
+                situation_check = save_situation_check(input_id, situation_description, situation_result)
+                apply_situation_to_input(user_input, situation_description, situation_result)
+                db.session.commit()
+                return redirect(auth_url("situation_clarify", input_id=input_id))
+
             situation_result = call_situation_check(situation_description)
             situation_check = save_situation_check(input_id, situation_description, situation_result)
             apply_situation_to_input(user_input, situation_description, situation_result)
@@ -2207,18 +2536,24 @@ def register_routes(app):
         fields = extract_user_input_fields(user_input.input_text)
         company_size = request.form.get("company_size", "").strip()
         industry_answer = request.form.get("industry_answer", "").strip()
+        industry_mode = request.form.get("industry_mode", "specify")
         if not company_size:
             flash("Выберите сегмент клиента, чтобы продолжить.", "warning")
             return redirect(auth_url("context_clarify", input_id=input_id))
         pending_industry = IndustryCheck.query.filter_by(input_id=input_id, status="needs_answer").order_by(IndustryCheck.created_at.desc()).first()
         if pending_industry:
-            if not industry_answer:
-                flash("Уточните отраслевую специфику, чтобы продолжить.", "warning")
-                return redirect(auth_url("context_clarify", input_id=input_id))
-            pending_industry.answer = industry_answer
-            pending_industry.status = "done"
-            pending_industry.industry_context_sufficient = True
-            company_industry = industry_answer
+            if industry_mode == "skip":
+                pending_industry.answer = None
+                pending_industry.status = "skipped"
+                pending_industry.industry_context_sufficient = False
+            else:
+                if not industry_answer:
+                    flash("Уточните отраслевую специфику, чтобы продолжить.", "warning")
+                    return redirect(auth_url("context_clarify", input_id=input_id))
+                pending_industry.answer = industry_answer
+                pending_industry.status = "done"
+                pending_industry.industry_context_sufficient = True
+            company_industry = industry_answer if industry_mode != "skip" else ""
             user_input.input_text = build_input_text(
                 company_size=company_size,
                 company_industry=company_industry,
@@ -2265,12 +2600,18 @@ def register_routes(app):
         get_input_or_403(input_id)
         industry_check = IndustryCheck.query.filter_by(input_id=input_id).order_by(IndustryCheck.created_at.desc()).first_or_404()
         answer = request.form.get("industry_answer", "").strip()
-        if not answer:
-            flash("Уточните отраслевую специфику, чтобы продолжить.", "warning")
-            return redirect(auth_url("industry_clarify", input_id=input_id))
-        industry_check.answer = answer
-        industry_check.status = "done"
-        industry_check.industry_context_sufficient = True
+        industry_mode = request.form.get("industry_mode", "specify")
+        if industry_mode == "skip":
+            industry_check.answer = None
+            industry_check.status = "skipped"
+            industry_check.industry_context_sufficient = False
+        else:
+            if not answer:
+                flash("Уточните отраслевую специфику, чтобы продолжить.", "warning")
+                return redirect(auth_url("industry_clarify", input_id=input_id))
+            industry_check.answer = answer
+            industry_check.status = "done"
+            industry_check.industry_context_sufficient = True
         db.session.commit()
         try:
             if create_clarification_if_needed(input_id):
@@ -2325,7 +2666,8 @@ def register_routes(app):
             items = call_openai(PROMPT_A, message)
             final_items = call_openai_check_str(items)
             for item in final_items:
-                db.session.add(Agent1Response(input_id=input_id, round_number=1, status="pending", **item))
+                db.session.add(Agent1Response(input_id=input_id, round_number=1, status="pending",
+                                              **{k: v for k, v in item.items() if k != "product"}))
             db.session.commit()
         except Exception as e:
             db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
@@ -2471,17 +2813,20 @@ def register_routes(app):
                 f"Описание: {selected.final_description}\n"
                 f"Логика: {selected.final_logic}\n"
                 f"Критерии: {selected.final_criteria}\n\n"
-                f"ВАЖНО: сгенерируй ровно 5 шагов. Формат ответа JSON."
+                f"ВАЖНО: сгенерируй ровно 3 шага без продуктов банка. Формат ответа JSON."
             )
             try:
-                final_items = generate_agent2_items(message, 5)
-                for item in final_items: db.session.add(Agent2Response(selected_id=selected_id, status="pending", **item))
+                final_items = generate_agent2_items(message, 3)
+                for item in final_items:
+                    db.session.add(Agent2Response(selected_id=selected_id, status="pending",
+                                                  **{k: v for k, v in item.items() if not k.startswith("_")}))
                 db.session.commit()
                 responses = Agent2Response.query.filter_by(selected_id=selected_id).order_by(Agent2Response.item_number.asc()).all()
-            except Exception as e: db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
+            except Exception as e:
+                db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
         accepted = any(item.status == "accepted" for item in responses)
-        attach_bank_products_to_agent2_responses(responses)
-        return render_template("agent2.html", selected=selected, responses=responses, accepted=accepted)
+        products = load_product_catalog()
+        return render_template("agent2.html", selected=selected, responses=responses, accepted=accepted, products=products)
 
     @app.route("/agent2/more/<int:selected_id>", methods=["POST"])
     @login_required
@@ -2539,6 +2884,49 @@ def register_routes(app):
         db.session.add(Agent2Response(selected_id=selected_id, item_number=next_agent2_item_number(selected_id), title=fields["title"], description=fields["description"], logic=fields["logic"], criteria=fields["criteria"], status="accepted", was_edited=True, implemented=False))
         db.session.commit()
         if request.is_json: return jsonify({"ok": True, "reload": True})
+        return redirect(auth_url("agent2", selected_id=selected_id))
+
+    @app.route("/item2/set_product/<int:response_id>", methods=["POST"])
+    @login_required
+    def item2_set_product(response_id):
+        response = get_agent2_response_or_403(response_id)
+        data = request.get_json(silent=True) or {}
+        product_name = (data.get("product") or "").strip()
+        response.product = product_name or None
+        db.session.commit()
+        return jsonify({"ok": True})
+
+    @app.route("/agent2/generate_product_step/<int:selected_id>", methods=["POST"])
+    @login_required
+    def generate_product_step(selected_id):
+        selected = get_selected_or_403(selected_id)
+        product_name = request.form.get("product_name", "").strip()
+        if not product_name:
+            flash("Выберите сервис банка.", "warning")
+            return redirect(auth_url("agent2", selected_id=selected_id))
+        products = load_product_catalog()
+        product = next((p for p in products if p["name"] == product_name), None)
+        product_desc = (product["description"] if product else "").strip()
+        message = (
+            f"Стратегия: {selected.final_title}\n"
+            f"Описание стратегии: {selected.final_description}\n"
+            f"Логика: {selected.final_logic}\n\n"
+            f"Сервис банка: {product_name}\n"
+            f"Описание сервиса: {product_desc}\n"
+        )
+        try:
+            items = call_openai(PROMPT_PRODUCT_STEP, message, json_instructions=JSON_INSTRUCTIONS_SINGLE_STEP)
+            items = mark_implemented_steps_local(items)
+            for item in items[:1]:
+                item["product"] = product_name
+                new_fields = {k: v for k, v in item.items() if not k.startswith("_")}
+                new_fields["item_number"] = next_agent2_item_number(selected_id)
+                db.session.add(Agent2Response(selected_id=selected_id, status="pending", **new_fields))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print("AI ERROR:", repr(e), flush=True)
+            flash_ai_error()
         return redirect(auth_url("agent2", selected_id=selected_id))
 
     @app.route("/agent2/finish/<int:selected_id>", methods=["POST"])

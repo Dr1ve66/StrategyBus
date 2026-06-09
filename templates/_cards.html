@@ -1,4 +1,4 @@
-{% macro render_cards(items, action_prefix) %}
+{% macro render_cards(items, action_prefix, products=[]) %}
   {% for item in items %}
     {% set edit = item.edit if action_prefix == 'item1' else none %}
     {% set shown_title = edit.edited_title if edit else item.title %}
@@ -45,29 +45,41 @@
           </div>
           {% if action_prefix == 'item2' %}
           <div class="col-12">
-            <label class="form-label fw-semibold">Продукты банка для реализации</label>
-            {% if item.bank_products %}
-            <div class="step-products">
-              {% for product in item.bank_products %}
-              <div class="step-product-chip">
-                <div class="step-product-name">{{ product.name }}</div>
-                {% if product.description %}
-                <div class="step-product-description">{{ product.description }}</div>
-                {% endif %}
-                {% if product.usage_hint %}
-                <div class="step-product-usage"><span class="step-product-usage-label">Зачем в этом шаге:</span> {{ product.usage_hint }}</div>
-                {% endif %}
+            <label class="form-label fw-semibold">
+              Сервис банка
+              <span class="text-muted fw-normal fs-6 ms-1">— необязательно</span>
+            </label>
+            <div class="product-combobox position-relative" data-response-id="{{ item.id }}">
+              <div class="input-group">
+                <input type="text"
+                       class="form-control product-search-input"
+                       placeholder="Начните вводить название сервиса…"
+                       value="{{ item.product or '' }}"
+                       autocomplete="off"
+                       data-response-id="{{ item.id }}">
+                <button class="btn btn-outline-secondary product-clear-btn"
+                        type="button"
+                        data-response-id="{{ item.id }}"
+                        {% if not item.product %}style="display:none"{% endif %}>✕</button>
               </div>
-              {% endfor %}
+              <div class="product-options-list list-group position-absolute w-100 shadow-sm d-none"
+                   style="z-index:300;max-height:220px;overflow-y:auto;">
+                <button type="button"
+                        class="list-group-item list-group-item-action text-muted product-option"
+                        data-value="" data-description="">— Убрать сервис —</button>
+                {% for p in products %}
+                <button type="button"
+                        class="list-group-item list-group-item-action product-option"
+                        data-value="{{ p.name }}"
+                        data-description="{{ p.description }}">{{ p.name }}</button>
+                {% endfor %}
+              </div>
             </div>
-            {% elif item.product_match_status == 'needs_clarification' and item.product_clarification_question %}
-            <div class="step-product-clarify alert alert-warning rounded-4 mb-0">
-              <div class="fw-semibold mb-1">Нужно уточнение для подбора продукта</div>
-              <div class="small">{{ item.product_clarification_question }}</div>
+            {% set _pmatch = products | selectattr('name', 'equalto', item.product) | list %}
+            <div class="product-desc-hint mt-1 text-muted small{% if not item.product %} d-none{% endif %}"
+                 data-response-id="{{ item.id }}">
+              {% if _pmatch %}{{ _pmatch[0].description }}{% endif %}
             </div>
-            {% else %}
-            <div class="text-muted small">Подходящий продукт не определён автоматически — уточните формулировку шага.</div>
-            {% endif %}
           </div>
           {% endif %}
         </div>

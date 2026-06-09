@@ -23,18 +23,29 @@
               data-ai-title="Проверяем уточнение"
               data-ai-subtitle="После этого продолжим анализ ситуации клиента…">
           <div class="mb-3">
-            <label class="form-label fw-semibold" for="industry_answer">
+            <label class="form-label fw-semibold">
               {{ industry_check.question or "Опишите отраслевую специфику компании." }}
             </label>
-            <textarea
-              id="industry_answer"
-              class="form-control"
-              name="industry_answer"
-              rows="5"
-              required
-              autofocus
-              placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
-            ></textarea>
+            <div class="mb-3">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input industry-toggle" type="radio" name="industry_mode" id="industry_mode_specify" value="specify" checked>
+                <label class="form-check-label" for="industry_mode_specify">Указать отрасль</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input industry-toggle" type="radio" name="industry_mode" id="industry_mode_skip" value="skip">
+                <label class="form-check-label" for="industry_mode_skip">Пропустить (не указывать отрасль)</label>
+              </div>
+            </div>
+            <div id="industry_answer_block">
+              <textarea
+                id="industry_answer"
+                class="form-control"
+                name="industry_answer"
+                rows="5"
+                autofocus
+                placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
+              ></textarea>
+            </div>
             <div class="form-text">
               Напишите своими словами. Важно указать, чем именно занимается компания и что в этой сфере влияет на проблему.
             </div>
@@ -50,4 +61,29 @@
     </div>
   </div>
 </div>
+
+<script>
+(function() {
+  const toggles = document.querySelectorAll('.industry-toggle');
+  const answerBlock = document.getElementById('industry_answer_block');
+  const answerField = document.getElementById('industry_answer');
+
+  function updateIndustryMode() {
+    const mode = document.querySelector('input[name="industry_mode"]:checked');
+    if (mode && mode.value === 'skip') {
+      answerBlock.style.display = 'none';
+      answerField.removeAttribute('required');
+    } else {
+      answerBlock.style.display = '';
+      answerField.setAttribute('required', 'required');
+    }
+  }
+
+  toggles.forEach(function(el) {
+    el.addEventListener('change', updateIndustryMode);
+  });
+
+  updateIndustryMode();
+})();
+</script>
 {% endblock %}

@@ -65,17 +65,28 @@
 
           {% if industry_check %}
           <div class="mb-4">
-            <label class="form-label fw-semibold" for="industry_answer">
+            <label class="form-label fw-semibold">
               {{ industry_check.question or "Опишите отраслевую специфику компании." }}
             </label>
-            <textarea
-              id="industry_answer"
-              class="form-control"
-              name="industry_answer"
-              rows="5"
-              required
-              placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
-            >{{ industry_check.answer or fields.company_industry }}</textarea>
+            <div class="mb-3">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input industry-toggle" type="radio" name="industry_mode" id="industry_mode_specify" value="specify" checked>
+                <label class="form-check-label" for="industry_mode_specify">Указать отрасль</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input industry-toggle" type="radio" name="industry_mode" id="industry_mode_skip" value="skip">
+                <label class="form-check-label" for="industry_mode_skip">Пропустить (не указывать отрасль)</label>
+              </div>
+            </div>
+            <div id="industry_answer_block">
+              <textarea
+                id="industry_answer"
+                class="form-control"
+                name="industry_answer"
+                rows="5"
+                placeholder="Например: B2B-продажа строительных материалов, клиенты покупают с отсрочкой 60–90 дней"
+              >{{ industry_check.answer or fields.company_industry }}</textarea>
+            </div>
             <div class="form-text">
               Отрасль уточняем только когда она важна для качества ответа.
             </div>
@@ -92,4 +103,30 @@
     </div>
   </div>
 </div>
+
+<script>
+(function() {
+  const toggles = document.querySelectorAll('.industry-toggle');
+  const answerBlock = document.getElementById('industry_answer_block');
+  const answerField = document.getElementById('industry_answer');
+
+  function updateIndustryMode() {
+    const mode = document.querySelector('input[name="industry_mode"]:checked');
+    if (mode && mode.value === 'skip') {
+      answerBlock.style.display = 'none';
+      answerField.removeAttribute('required');
+    } else {
+      answerBlock.style.display = '';
+      answerField.setAttribute('required', 'required');
+    }
+  }
+
+  toggles.forEach(function(el) {
+    el.addEventListener('change', updateIndustryMode);
+  });
+
+  // initial state
+  updateIndustryMode();
+})();
+</script>
 {% endblock %}
