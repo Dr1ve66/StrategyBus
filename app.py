@@ -948,7 +948,7 @@ def call_openai(system_prompt, user_message, json_instructions=None):
     instructions = json_instructions if json_instructions is not None else JSON_INSTRUCTIONS
     client = OpenAI(api_key=api_key, timeout=120)
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": f"{system_prompt.strip()}\n\n{instructions.strip()}"},
@@ -963,7 +963,7 @@ def call_openai_raw(system_prompt, user_message):
     client = OpenAI(api_key=api_key, timeout=120)
     enhanced_prompt = f"{system_prompt.strip()}\nВАЖНО: Ответь строго в формате JSON. Никакого текста вне JSON."
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": enhanced_prompt},
@@ -1932,7 +1932,7 @@ def call_openai_check_str(item):
     system_prompt += "Если стратегия есть в этом списке или что-то похожее, то пометь как Реализована.\nВАЖНО верни те же самые данные, которые ты получил с изменением только одного поля implemented"
     message = json.dumps(item, ensure_ascii=False)
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": f"{system_prompt.strip()}\n\n{JSON_INSTRUCTIONS.strip()}"},
@@ -1956,7 +1956,7 @@ def call_openai_check_stp(item):
     system_prompt += "Если стратегия или шаг есть в этом списке или что-то похожее, то пометь как Реализована.\nВАЖНО верни те же самые данные, которые ты получил с изменением только одного поля implemented"
     message = json.dumps(item, ensure_ascii=False)
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": f"{system_prompt.strip()}\n\n{JSON_INSTRUCTIONS.strip()}"},
@@ -2004,7 +2004,7 @@ def validate_custom_item(fields, prompt_type):
     try:
         client = OpenAI(api_key=api_key, timeout=30)
         response = client.chat.completions.create(
-            model="gpt-4o-mini", response_format={"type": "json_object"},
+            model="gpt-4.1-mini", response_format={"type": "json_object"},
             messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": item_text}],
         )
         data = json.loads(response.choices[0].message.content or "{}")
