@@ -29,6 +29,7 @@ from strategy_readiness import (
     infer_domain,
     infer_goal_from_problem,
     is_bank_centric,
+    is_manager_task,
     is_vague_request,
     match_archetype,
     problem_is_actionable,
@@ -268,6 +269,84 @@ class StrategyReadinessBankCentricTests(unittest.TestCase):
         result = assess_strategy_readiness("отток клиентов из банка")
         self.assertFalse(result["ok"])
         self.assertIn("банк", result["reason"].lower())
+
+
+class ManagerTaskGuardTests(unittest.TestCase):
+    """Situations that describe the bank manager's task — must be rejected."""
+
+    MANAGER_TASK_PHRASES = (
+        "У меня есть список кому рассчитан предодобренный кредит, мне нужно составить их портрет",
+        "Мне нужно составить аналитику по портфелю клиентов",
+        "Мне нужно подготовить КП для клиента",
+        "Нужно составить портрет клиентов малого бизнеса",
+        "Нужно выполнить план по кредитованию",
+        "Нужно подготовить коммерческое предложение по РКО",
+        "Нужна стратегия для работы с сегментом малого бизнеса",
+        "Хочу предложить клиентам из портфеля факторинг",
+        "Нужно найти клиентов для зарплатного проекта",
+    )
+
+    CLIENT_BUSINESS_PHRASES = (
+        "У клиента падают продажи из-за конкурентов",
+        "Клиент испытывает кассовый разрыв",
+        "Клиент хочет выйти на маркетплейсы",
+        "Клиент хочет масштабироваться — открыть ещё 3 точки",
+        "Клиент ищет инвестора для расширения производства",
+        "У клиента высокая налоговая нагрузка",
+        "Клиент теряет сотрудников — конкуренты платят больше",
+        "Клиент хочет поговорить о возможностях",
+        "Нужно найти новых клиентов для нашего нового продукта",  # "наш" = клиентский бизнес
+    )
+
+    def test_manager_task_phrases_detected(self):
+        for phrase in self.MANAGER_TASK_PHRASES:
+            with self.subTest(phrase=phrase):
+                self.assertTrue(
+                    is_manager_task(phrase),
+                    msg=f"Expected manager-task for {phrase!r}",
+                )
+
+    def test_manager_task_phrases_rejected(self):
+        for phrase in self.MANAGER_TASK_PHRASES:
+            with self.subTest(phrase=phrase):
+                result = assess_strategy_readiness(phrase)
+                self.assertFalse(result["ok"], msg=f"Should be rejected: {phrase!r}")
+                self.assertEqual(result["tier"], READINESS_TIER_REJECT)
+
+    def test_client_business_phrases_not_manager_task(self):
+        for phrase in self.CLIENT_BUSINESS_PHRASES:
+            with self.subTest(phrase=phrase):
+                self.assertFalse(
+                    is_manager_task(phrase),
+                    msg=f"False positive: {phrase!r} detected as manager task",
+                )
+
+
+class BankCentricExtendedTests(unittest.TestCase):
+    """Bank retention / reactivation patterns added in the second pass."""
+
+    BANK_RETENTION_PHRASES = (
+        "Клиент давно не пользуется расчётным счётом, нужно его реактивировать",
+        "У клиента истекает депозит через месяц, нужно его удержать",
+        "Нужно удержать вклад клиента",
+        "Почему клиенты не берут кредиты в нашем банке",
+        "Истекает депозит клиента",
+    )
+
+    def test_bank_retention_detected(self):
+        for phrase in self.BANK_RETENTION_PHRASES:
+            with self.subTest(phrase=phrase):
+                self.assertTrue(
+                    is_bank_centric(phrase),
+                    msg=f"Expected bank-centric for {phrase!r}",
+                )
+
+    def test_bank_retention_rejected(self):
+        for phrase in self.BANK_RETENTION_PHRASES:
+            with self.subTest(phrase=phrase):
+                result = assess_strategy_readiness(phrase)
+                self.assertFalse(result["ok"], msg=f"Should be rejected: {phrase!r}")
+                self.assertEqual(result["tier"], READINESS_TIER_REJECT)
 
 
 class StrategyReadinessBackwardCompatTests(unittest.TestCase):
