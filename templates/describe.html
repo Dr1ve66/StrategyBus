@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-10">
+    <div class="page-header">
+      <div class="eyebrow mb-2">Новый анализ</div>
+      <h1 class="display-5 page-title mb-2">Опишите ситуацию клиента</h1>
+      <p class="page-subtitle mb-0">
+        Подходящего сигнала не нашлось — опишите ситуацию своими словами.
+        Система проверит ввод и при необходимости уточнит сегмент и отрасль.
+      </p>
+    </div>
+
+    <div class="card hero-card shadow-sm border-0 rounded-4">
+      <div class="card-body p-4 p-lg-5 position-relative">
+        <form method="post" action="{{ url_for('process') }}" data-ai-form
+              data-ai-title="Анализируем ситуацию клиента"
+              data-ai-subtitle="Проверяем описание…">
+          <input type="hidden" name="source" value="describe">
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold" for="situation_description">
+              Описание ситуации у компании
+            </label>
+            <textarea
+              id="situation_description"
+              class="form-control input-textarea"
+              name="situation_description"
+              rows="10"
+              maxlength="2000"
+              placeholder="Одна ситуация: что происходит, где проявляется, чего хотите добиться"
+              style="resize: vertical;"
+              autofocus
+            ></textarea>
+            <div class="form-text d-flex justify-content-between gap-3">
+              <span>Одна главная проблема — так стратегия будет точнее.</span>
+              <span id="situation-char-counter" class="text-muted text-nowrap">0 / 2000</span>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
+            <a class="btn btn-outline-secondary" href="{{ url_for('index') }}">
+              ← Назад к сигналам
+            </a>
+            <button class="btn btn-primary btn-lg" type="submit">
+              Запустить анализ →
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const situationTextarea = document.getElementById('situation_description');
+    const situationCounter = document.getElementById('situation-char-counter');
+    const softLimit = 1000;
+    const hardLimit = 2000;
+    function updateSituationCounter() {
+      if (!situationTextarea || !situationCounter) return;
+      const len = situationTextarea.value.length;
+      situationCounter.textContent = len + ' / ' + hardLimit;
+      situationCounter.classList.toggle('text-warning', len > softLimit && len <= hardLimit);
+      situationCounter.classList.toggle('text-danger', len > hardLimit);
+    }
+    if (situationTextarea) {
+      situationTextarea.addEventListener('input', updateSituationCounter);
+      updateSituationCounter();
+    }
+  });
+</script>
+{% endblock %}

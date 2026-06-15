@@ -509,26 +509,6 @@ PROMPT_DEPENDENCY_TEST = """
 4. reason — короткое обоснование (1-2 предложения на русском).
 """
 
-PROMPT_CLARIFY_ADDON = """
-
-ДОПОЛНИТЕЛЬНЫЕ ПРАВИЛА — учёт универсальности проблемы:
-
-1. Если проблема универсальная (FINANCIAL или OPERATIONAL, не зависит от отрасли):
-   - НЕ задавай вопрос про отрасль
-   - Если отрасль уже указана размыто — не уточняй, оставь как есть
-   - Фокусируйся на уточнении РЕСУРСОВ и МАСШТАБА, а не отрасли
-
-2. Если проблема отрасле-зависимая (REGULATORY, MARKET, или STRATEGIC с отраслевой спецификой):
-   - Проверь, указана ли отрасль с достаточной детализацией
-   - Если размыто и триггер сработал — задай ОДИН уточняющий вопрос
-
-3. При формировании вопроса про отрасль учитывай problem_nature:
-   - FINANCIAL → НЕ задавай вопрос про отрасль (она не влияет на стратегию)
-   - OPERATIONAL → НЕ задавай вопрос про отрасль (процессные решения универсальны)
-   - STRATEGIC → задавай только если нужна специфика рынка
-   - REGULATORY → задавай (регуляторика отрасле-специфична)
-   - MARKET → задавай если B2B/B2C различается
-"""
 
 PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летним опытом работы с корпоративными клиентами.
 Твоя задача: сформировать 1 стратегию для клиента на основе входных данных.
@@ -549,44 +529,25 @@ PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летни
 Если во входных данных указан продукт:
 Используй его как инструмент внутри стратегии, если он релевантен.
 Не делай продукт названием стратегии.
-Не подменяй продукт абстрактными словами.
+Не подменяй продукт абстрактными словами («финансирование», «банковский инструмент»).
 Не придумывай использование продукта, если оно не логично в данной ситуации.
-Если продукт не указан как уже используемый — считай его предлагаемым инструментом.
-Продукт может использоваться только в двух сценариях:
-Как новый инструмент (например: оформить кредит, купить страховку)
-Как уже действующий инструмент, только если это прямо указано во входных данных
-Запрещено:
-использовать продукт как источник выплат/ресурсов, если это не указано явно;
-строить стратегию на уже полученных деньгах, если это не подтверждено.
-Запрещено:
-использовать формулировки типа «финансирование», «банковский инструмент» вместо конкретного продукта;
-предлагать сценарии, требующие уже существующего контракта (например, страхового), если это не указано.
+Если продукт не указан как уже используемый — считай его предлагаемым инструментом, а не действующим.
+Главное правило: используй только то, что есть во входных данных
+Нельзя предполагать наличие договоров, выплат или ресурсов, которые явно не указаны.
+Если в описании нет страховки — страховки нет. Нет одобренного кредита — кредита нет. Нет партнёров — партнёров нет.
+Механизм стратегии должен быть реализуем без скрытых допущений.
 Анализ перед формированием стратегий
 Перед ответом обязательно учитывай:
 размер компании (ресурсы и ограничения);
-отрасль и её текущий тренд (рост / спад);
-макроэкономическую ситуацию в России;
+отрасль и её специфику;
 конкретную проблему из описания.
-Не придумывай факты, которых нет во входных данных.Механизм должен быть реализуем без предположений о скрытых ресурсах.
 Требования к стратегии
 Нужно предложить 1 стратегию.
-Стратегия должна относиться к одному из типов механики:
+Ориентируйся на один из типов механики, но не ограничивайся ими, если ситуация требует другого подхода:
 Снижение потерь / защита
 Восстановление операционной деятельности
 Изменение или расширение модели дохода
-Выбери тот тип, который наиболее релевантен ситуации клиента.
-Запрещено использовать факты, которых нет во входных данных;
-Нельзя предполагать наличие: действующих договоров (страхование, кредит, лизинг и т.д.);уже полученных или ожидаемых выплат;ресурсов, которые не указаны явно.
-Недопустимые примеры (запрещено):
-Предположение фактов, которых нет:
-«Получение страховой выплаты для компенсации убытков» (если страховка не указана);
-«Использование уже одобренного кредита» (если кредит не указан);
-«Привлечение инвестиций от текущих партнёров» (если партнёры не описаны);
-«Использование накопленных резервов» (если резервы не упомянуты).
-Общее правило:
-Нельзя использовать ресурсы или условия, которых нет во входных данных.
-Если в описании НЕ сказано, что у компании есть страховка —
-считай, что её нет.
+Выбери тот тип, который наиболее точно описывает логику решения. Если ни один не подходит — сформулируй тип самостоятельно одной фразой.
 Требования к названию стратегии
 Название:
 максимум 5 слов;
@@ -612,7 +573,8 @@ PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летни
 Инструменты
 Какие инструменты используются (включая продукт, если применимо).
 Бизнес-эффект
-Оцифрованный результат (выручка, издержки, маржа и т.д.).
+Если во входных данных есть конкретные цифры (выручка, процент текучки, срок кассового разрыва, объём потерь и т.п.) — используй их для оценки эффекта.
+Если цифр нет — опиши эффект качественно: что изменится и за счёт чего. Не придумывай проценты и суммы, которых нет во входных данных.
 Критерии (кому НЕ подходит)
 Критерии должны:
 быть проверяемыми по данным (банк или открытые источники);
@@ -627,7 +589,7 @@ PROMPT_A_DESC = """Ты — бизнес-консультант с 20-летни
 название не содержит продукт;
 нет абстрактных формулировок;
 продукт (если задан) используется корректно;
-стратегия реализуема и имеет измеримый эффект.
+стратегия реализуема, бизнес-эффект обоснован данными из ввода (не выдуман).
 Если есть нарушения — исправь до вывода.
 """
 PROMPT_A = os.environ.get("PROMPT_A", PROMPT_A_DESC)
@@ -638,13 +600,20 @@ PROMPT_B_DESC = """Ты — бизнес консультант с 20-летни
 Шаг — это простое действие, которое можно выполнить на практике и которое не требует дальнейшего разбиения для исполнителя.
 Название Шага должно начинаться с глагола.
 Каждый шаг должен быть: однозначным, реализуемым, ограниченным по сроку, привязанным к цели стратегии.
-Пример: изучить информацию о торгах, провести аудит соответствия компании, сделать ремонт помещения, проверить документы УКЭП, проанализировать бизнес, подобрать тендер.
+Хороший шаг отвечает на три вопроса:
+— Что именно делаем? (конкретное действие, не процесс)
+— С чем работаем? (объект: список клиентов, документы, сотрудники, поставщики и т.п.)
+— Как поймём, что сделали? (измеримый результат или артефакт)
 Избегай общих и абстрактных формулировок, не используй слова без конкретизации: «улучшить», «оптимизировать», «усилить», «развить», «проработать».
 Каждый шаг должен быть реализуем в срок до 1 месяца.
-Принадлежность Шага к Стратегии очевидна.
+Каждый шаг должен явно приближать к цели стратегии. В поле logic укажи, как именно этот шаг связан с целью — что он даёт на пути к результату.
 Критерии — это критерии кому данный Шаг не подходит.
 Критерии должны: относиться к открытым данным (отрасль, ОКВЭД, регион, лицензии) или к данным банка (выручка, количество сотрудников, срок деятельности, назначения платежей). Не предлагай критерии, которые можно узнать только внутри компании. Иметь числовое значение — не «не подходит по ОКВЭД», а «не подходит ОКВЭД 01, 02».
-Поле "product" всегда оставляй пустым ("") — сервис банка к шагу добавит менеджер вручную.
+Продукты банка
+Для каждого шага подумай: какой сервис банка поможет клиенту его выполнить?
+Если такой сервис есть — упомяни его естественно в тексте описания шага и укажи его название в поле "product".
+Сервис банка — это инструмент внутри шага, а не цель шага. Шаг описывает бизнес-действие клиента, а не «подключить продукт».
+Минимум 2 из 3 шагов должны содержать банковский сервис. Максимум 1 шаг может быть без продукта — оставь поле "product" пустым ("").
 """
 PROMPT_B_BASE = os.environ.get("PROMPT_B", PROMPT_B_DESC)
 
@@ -670,11 +639,10 @@ JSON_INSTRUCTIONS = """
  "title": "Краткое название варианта",
  "description": "Описание варианта (2-3 предложения)",
  "logic": "Логика и обоснование",
- "criteria": "Критерии оценки / применения",
- "implemented": "Флаг реализации (ОБЯЗАТЕЛЬНО ЗАПОЛНИТЬ значением Реализована или Не реализована)"
+ "criteria": "Критерии оценки / применения"
 },
-{ "id": 2, "title": "", "description": "", "logic": "", "criteria": "", "implemented": ""},
-{ "id": 3, "title": "", "description": "", "logic": "", "criteria": "", "implemented": ""}
+{ "id": 2, "title": "", "description": "", "logic": "", "criteria": ""},
+{ "id": 3, "title": "", "description": "", "logic": "", "criteria": ""}
 ]}
 Никакого текста вне JSON.
 """
@@ -688,11 +656,10 @@ JSON_INSTRUCTIONS_AGENT2 = """
  "description": "Описание шага (2-3 предложения)",
  "logic": "Логика и обоснование",
  "criteria": "Критерии — кому шаг не подходит (с числовыми значениями)",
- "product": "",
- "implemented": "Флаг реализации (ОБЯЗАТЕЛЬНО ЗАПОЛНИТЬ значением Реализована или Не реализована)"
+ "product": ""
 },
-{ "id": 2, "title": "", "description": "", "logic": "", "criteria": "", "product": "", "implemented": ""},
-{ "id": 3, "title": "", "description": "", "logic": "", "criteria": "", "product": "", "implemented": ""}
+{ "id": 2, "title": "", "description": "", "logic": "", "criteria": "", "product": ""},
+{ "id": 3, "title": "", "description": "", "logic": "", "criteria": "", "product": ""}
 ]}
 Никакого текста вне JSON.
 """
@@ -706,8 +673,7 @@ JSON_INSTRUCTIONS_SINGLE_STEP = """
  "description": "Описание шага (2-3 предложения) — объясни, как сервис банка помогает в этом действии",
  "logic": "Логика — почему именно этот сервис банка уместен здесь",
  "criteria": "Критерии — кому шаг не подходит (с числовыми значениями)",
- "product": "ТОЧНОЕ название сервиса банка из запроса",
- "implemented": "Не реализована"
+ "product": "ТОЧНОЕ название сервиса банка из запроса"
 }
 ]}
 Никакого текста вне JSON.
@@ -798,34 +764,26 @@ key должен быть понятным (snake_case)
 PROMPT_INDUSTRY_CHECK = """
 Ты — бизнес-аналитик. Реши, нужно ли уточнять отрасль ПЕРЕД генерацией стратегии.
 
+Во входных данных уже есть результат теста на зависимость от отрасли:
+- problem_nature: тип проблемы (FINANCIAL, OPERATIONAL, STRATEGIC, REGULATORY, MARKET)
+- is_universal_problem: true если проблема одинаково решается в любой отрасли
+
+Используй эти значения как отправную точку — не пересчитывай их.
+
 Главное правило: по умолчанию industry_detail_required = false.
-Спрашивай отрасль только если без неё ты не можешь предложить релевантную стратегию
-или подобрать уместные продукты — то есть отрасль меняет саму логику решения.
+Спрашивай отрасль только если без неё ты не можешь предложить релевантную стратегию —
+то есть отрасль меняет саму логику решения.
 
 Алгоритм:
-1. Проверь, указана ли отрасль уже в company_industry или в описании ситуации.
+1. Если is_universal_problem = true → industry_detail_required = false. Стоп.
+2. Проверь, указана ли отрасль уже в company_industry или в описании ситуации.
    Если да — industry_detail_required = false, извлеки контекст в extracted_industry_context.
-2. Задай себе тест: «Две компании разного масштаба, но с одной и той же формулировкой проблемы —
-   нужны ли им принципиально разные стратегии ТОЛЬКО из-за отрасли?»
-   Если нет — industry_detail_required = false.
-3. Не спрашивай отрасль из-за второстепенных слов (расходы, клиенты, платежи),
-   если корневая проблема решается одинаково в большинстве отраслей.
-4. Спрашивай отрасль только если она влияет на: регуляторику, цепочку поставок,
-   сезонность спроса, тип клиентов B2B/B2C, лицензирование, отраслевые меры поддержки,
-   сравнение с отраслевым бенчмарком.
-5. Если industry_detail_required = true, обязательно заполни strategy_impact_if_unknown:
-   одно конкретное предложение, ЧТО именно в стратегии/шагах/продуктах изменится после ответа.
-   Без этого поля нельзя ставить industry_detail_required = true.
+3. Спрашивай отрасль только если она влияет на: регуляторику, цепочку поставок,
+   сезонность спроса, тип клиентов B2B/B2C, лицензирование, отраслевые меры поддержки.
+4. Если industry_detail_required = true, обязательно заполни strategy_impact_if_unknown:
+   одно конкретное предложение, ЧТО именно в стратегии изменится после ответа.
 
-КРИТИЧЕСКОЕ ПРАВИЛО ДЛЯ УНИВЕРСАЛЬНЫХ ПРОБЛЕМ:
-Если problem_nature = "FINANCIAL" или problem_nature = "OPERATIONAL",
-то industry_detail_required ВСЕГДА = false.
-Для этих типов проблем отрасль НЕ влияет на стратегию —
-решение одно и то же для любой компании (факторинг, управление дебиторкой,
-оптимизация затрат, найм, удержание).
-
-Не задавай общих вопросов вроде «уточните отрасль» или «в какой отрасли работает компания».
-Вопрос должен быть привязан к ситуации и к решению, которое зависит от отрасли.
+Не задавай общих вопросов вроде «уточните отрасль». Вопрос должен быть привязан к ситуации.
 
 Ответь строго JSON:
 {
@@ -1815,7 +1773,7 @@ def normalize_industry_check(data, fallback_industry):
         "question": question,
     }
 
-def call_industry_check(company_size, company_industry, situation_description, product_name, signal=None):
+def call_industry_check(company_size, company_industry, situation_description, product_name, signal=None, dep_test=None):
     known_industry = industry_context_text(company_industry, situation_description)
     if known_industry:
         return normalize_industry_check(
@@ -1834,6 +1792,8 @@ def call_industry_check(company_size, company_industry, situation_description, p
         "situation_description": situation_description,
         "product_name": product_name,
         "signal": signal,
+        "problem_nature": dep_test.get("problem_nature") if dep_test else None,
+        "is_universal_problem": dep_test.get("is_universal_problem") if dep_test else None,
     }, ensure_ascii=False)
     data = call_openai_raw(PROMPT_INDUSTRY_CHECK, message)
     result = normalize_industry_check(data, company_industry)
@@ -1860,12 +1820,25 @@ def call_dependency_test(situation_description):
         "reason": str(data.get("reason", "")),
     }
 
-def create_clarification_if_needed(input_id):
+_INDUSTRY_QUESTION_KEYWORDS = ("отрасл", "индустр", "сфер", "сектор", "под-отрасл", "вид бизнес", "тип бизнес")
+
+def _is_industry_question(q):
+    text = (q.get("key", "") + " " + q.get("question", "")).lower()
+    return any(kw in text for kw in _INDUSTRY_QUESTION_KEYWORDS)
+
+def create_clarification_if_needed(input_id, dep_test=None):
     user_input = get_input_or_403(input_id)
     final_input = build_final_input(user_input, None)
+    if dep_test:
+        final_input += f"\n\nproblem_nature: {dep_test.get('problem_nature', '')}\nis_universal_problem: {dep_test.get('is_universal_problem', False)}"
+    industry_skipped = IndustryCheck.query.filter_by(input_id=input_id, status="skipped").first() is not None
+    if industry_skipped:
+        final_input += "\n\nВАЖНО: пользователь уже отказался уточнять отрасль. Не задавай вопросы про отрасль, сферу деятельности, под-отрасль или вид бизнеса."
     clarify = call_openai_raw(PROMPT_CLARIFY, final_input)
     if clarify.get("status") == "need_clarification":
         questions = clarify.get("questions") or []
+        if industry_skipped:
+            questions = [q for q in questions if not _is_industry_question(q)]
         if questions:
             existing = Clarification.query.filter_by(input_id=input_id).first()
             if existing:
@@ -1891,6 +1864,7 @@ def run_context_checks_after_situation(input_id):
         fields["situation_description"],
         fields["product_name"],
         signals_joined(fields["signals"]),
+        dep_test=dep_test,
     )
 
     # Если проблема универсальная — принудительно снимаем флаг
@@ -1911,7 +1885,7 @@ def run_context_checks_after_situation(input_id):
     db.session.commit()
     if industry_check.status == "needs_answer":
         return redirect(auth_url("context_clarify", input_id=user_input.id))
-    if create_clarification_if_needed(user_input.id):
+    if create_clarification_if_needed(user_input.id, dep_test=dep_test):
         db.session.commit()
         return redirect(auth_url("clarify", input_id=user_input.id))
     db.session.commit()
@@ -2338,6 +2312,10 @@ def register_routes(app):
     @login_required
     def index(): return render_template("index.html", signals=load_all_signals())
 
+    @app.route("/describe")
+    @login_required
+    def describe(): return render_template("describe.html")
+
     @app.route("/history")
     @login_required
     def history():
@@ -2380,18 +2358,21 @@ def register_routes(app):
     @app.route("/process", methods=["POST"])
     @login_required
     def process():
-        product_name = request.form.get("product_name", "").strip()
         signals = [item.strip() for item in request.form.getlist("signal") if item.strip()]
         situation_description = request.form.get("situation_description", "").strip()
+        from_describe = request.form.get("source") == "describe"
+        fallback = "describe" if from_describe else "index"
         if not situation_description and not signals:
-            flash("Опишите ситуацию компании или выберите хотя бы один сигнал.", "warning")
-            return redirect(url_for("index"))
+            if from_describe:
+                flash("Опишите ситуацию компании.", "warning")
+            else:
+                flash("Выберите хотя бы один сигнал или перейдите к описанию ситуации.", "warning")
+            return redirect(url_for(fallback))
         if signals and not signals_all_exist(signals):
             flash("Выберите сигналы только из списка.", "warning")
             return redirect(url_for("index"))
         input_text = build_input_text(
             situation_description=situation_description,
-            product_name=product_name,
             signals=signals,
         )
         user_input = UserInput(user_id=current_user_id(), input_text=input_text, session_token=str(uuid.uuid4()))
@@ -2425,7 +2406,7 @@ def register_routes(app):
             return redirect(auth_url("context_clarify", input_id=user_input.id))
         except Exception as e:
             db.session.rollback(); print("AI ERROR:", repr(e), flush=True); flash_ai_error()
-            return redirect(url_for("index"))
+            return redirect(url_for(fallback))
 
     @app.route("/situation_clarify/<int:input_id>")
     @login_required
@@ -2930,10 +2911,13 @@ def register_routes(app):
         products = load_product_catalog()
         product = next((p for p in products if p["name"] == product_name), None)
         product_desc = (product["description"] if product else "").strip()
+        existing_steps = Agent2Response.query.filter_by(selected_id=selected_id).order_by(Agent2Response.item_number.asc()).all()
+        existing_titles = "\n".join(f"- {s.title}" for s in existing_steps if s.title)
         message = (
             f"Стратегия: {selected.final_title}\n"
             f"Описание стратегии: {selected.final_description}\n"
             f"Логика: {selected.final_logic}\n\n"
+            f"Уже существующие шаги (не повторяй их по смыслу):\n{existing_titles}\n\n"
             f"Сервис банка: {product_name}\n"
             f"Описание сервиса: {product_desc}\n"
         )
