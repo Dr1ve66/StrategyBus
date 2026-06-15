@@ -1855,7 +1855,9 @@ def run_context_checks_after_situation(input_id):
     fields = extract_user_input_fields(user_input.input_text)
 
     # --- Problem Nature Router: Dependency Test ---
-    dep_test = call_dependency_test(fields["situation_description"])
+    # В режиме «только сигналы» описания нет — сам сигнал является формулировкой проблемы.
+    problem_text = fields["situation_description"] or signals_joined(fields["signals"])
+    dep_test = call_dependency_test(problem_text)
 
     # --- Industry Check с учётом природы проблемы ---
     check_data = call_industry_check(

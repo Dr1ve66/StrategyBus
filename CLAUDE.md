@@ -36,17 +36,20 @@ python app.py        # напрямую; запускает Flask на 0.0.0.0:5
 ## Архитектура: основной поток
 
 ```
-/  →  /process  →  /situation_clarify?  →  /context_clarify  →  /industry_clarify?
+/ (сигналы) ─┬─ выбран сигнал ──────────────┐
+             └─ /describe (описание) ────────┤
+                                             ▼
+/process  →  /situation_clarify?  →  /context_clarify  →  /industry_clarify?
      →  /clarify?  →  /process_after_clarify  →  /review  →  /continue
      →  /agent2  →  /agent2/finish  →  /result  →  /result_pdf
 ```
 
-### 1. Ввод (`/`, `index.html`)
+### 1. Ввод — два раздельных экрана
 
-Форма принимает:
-- **Сигналы** — выбор из `data/signals.tsv` (pre-defined триггеры, группируются по сегменту: `micro_small` / `medium_large`)
-- **Описание ситуации** — свободный текст
-- **Продукт** (опционально) — подсказка Agent 2
+Ввод разбит на последовательность «сначала сигнал, иначе описание» (экраны строго раздельны, поле продукта в UI отсутствует):
+
+- **Экран 1 — сигналы** (`/`, `index.html`): выбор одного или нескольких сигналов из `data/signals.tsv` (pre-defined триггеры, группируются по сегменту: `micro_small` / `medium_large`). Кнопка «Запустить анализ» отправляет выбранные сигналы в `/process`. Кнопка «Не нашёл подходящий сигнал →» ведёт на экран 2.
+- **Экран 2 — описание** (`/describe`, `describe.html`): свободный текст описания ситуации как fallback, когда подходящего сигнала нет. Постит в тот же `/process` со скрытым полем `source=describe` (используется для возврата на нужный экран при ошибке валидации).
 
 ### 2. Валидация (`/process`)
 
@@ -156,7 +159,8 @@ scripts/
 
 templates/
   base.html                # Bootstrap layout, flash-сообщения
-  index.html               # Форма ввода (сигналы + описание)
+  index.html               # Экран 1: выбор сигналов
+  describe.html            # Экран 2: свободное описание ситуации (fallback)
   situation_clarify.html   # Уточнение ситуации (focus/slots)
   context_clarify.html     # Уточнение сегмента/отрасли
   industry_clarify.html    # Углублённый вопрос про отрасль
@@ -199,9 +203,10 @@ User
 | GET/POST | `/register` | Регистрация |
 | GET/POST | `/login` | Вход (username или email) |
 | GET | `/logout` | Выход |
-| GET | `/` | Главная: форма ввода |
+| GET | `/` | Экран 1: выбор сигналов |
+| GET | `/describe` | Экран 2: свободное описание ситуации (fallback) |
 | GET | `/history` | История запросов |
-| POST | `/process` | Создание UserInput + валидация |
+| POST | `/process` | Создание UserInput + валидация (signals или описание) |
 | GET | `/situation_clarify/<id>` | Показ уточняющего экрана |
 | POST | `/situation_clarify/<id>` | Обработка ответа, повторная проверка |
 | GET/POST | `/context_clarify/<id>` | Сегмент + отрасль |
